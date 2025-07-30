@@ -1,0 +1,239 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { setupAuth } from "./auth";
+import { storage } from "./storage";
+import { insertRoomSchema, insertBookingSchema } from "@shared/schema";
+import { z } from "zod";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication routes
+  setupAuth(app);
+
+  // Room routes
+  app.get("/api/rooms", async (req, res) => {
+    try {
+      const rooms = await storage.getRooms();
+      res.json(rooms);
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+      res.status(500).json({ message: "Failed to fetch rooms" });
+    }
+  });
+
+  app.post("/api/rooms", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const roomData = insertRoomSchema.parse(req.body);
+      const room = await storage.createRoom(roomData);
+      res.status(201).json(room);
+    } catch (error) {
+      console.error("Error creating room:", error);
+      res.status(400).json({ message: "Invalid room data" });
+    }
+  });
+
+  app.patch("/api/rooms/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const roomData = insertRoomSchema.partial().parse(req.body);
+      const room = await storage.updateRoom(req.params.id, roomData);
+      if (!room) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+      res.json(room);
+    } catch (error) {
+      console.error("Error updating room:", error);
+      res.status(400).json({ message: "Invalid room data" });
+    }
+  });
+
+  app.delete("/api/rooms/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const success = await storage.deleteRoom(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      res.status(500).json({ message: "Failed to delete room" });
+    }
+  });
+
+  // Booking routes
+  app.get("/api/bookings", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const bookings = req.user?.isAdmin 
+        ? await storage.getBookings()
+        : await storage.getBookingsByUser(req.user!.id);
+      res.json(bookings);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  app.post("/api/bookings", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const bookingData = insertBookingSchema.parse(req.body);
+      
+      // Check for conflicts
+      const hasConflict = await storage.checkBookingConflict(
+        bookingData.roomId,
+        bookingData.date,
+        bookingData.startTime,
+        bookingData.endTime
+      );
+
+      if (hasConflict) {
+        return res.status(409).json({ message: "Room is already booked for this time slot" });
+      }
+
+      // Validate time range
+      if (bookingData.startTime >= bookingData.endTime) {
+        return res.status(400).json({ message: "End time must be after start time" });
+      }
+
+      const booking = await storage.createBooking({
+        ...bookingData,
+        userId: req.user!.id,
+      });
+      
+      res.status(201).json(booking);
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid booking data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create booking" });
+      }
+    }
+  });
+
+  app.patch("/api/bookings/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const existingBooking = await storage.getBooking(req.params.id);
+      if (!existingBooking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Check if user owns booking or is admin
+      if (existingBooking.userId !== req.user!.id && !req.user?.isAdmin) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const bookingData = insertBookingSchema.partial().parse(req.body);
+      
+      // If updating time/date/room, check for conflicts
+      if (bookingData.roomId || bookingData.date || bookingData.startTime || bookingData.endTime) {
+        const roomId = bookingData.roomId || existingBooking.roomId;
+        const date = bookingData.date || existingBooking.date;
+        const startTime = bookingData.startTime || existingBooking.startTime;
+        const endTime = bookingData.endTime || existingBooking.endTime;
+
+        if (startTime >= endTime) {
+          return res.status(400).json({ message: "End time must be after start time" });
+        }
+
+        const hasConflict = await storage.checkBookingConflict(
+          roomId,
+          date,
+          startTime,
+          endTime,
+          req.params.id
+        );
+
+        if (hasConflict) {
+          return res.status(409).json({ message: "Room is already booked for this time slot" });
+        }
+      }
+
+      const booking = await storage.updateBooking(req.params.id, bookingData);
+      res.json(booking);
+    } catch (error) {
+      console.error("Error updating booking:", error);
+      res.status(400).json({ message: "Invalid booking data" });
+    }
+  });
+
+  app.delete("/api/bookings/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const existingBooking = await storage.getBooking(req.params.id);
+      if (!existingBooking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Check if user owns booking or is admin
+      if (existingBooking.userId !== req.user!.id && !req.user?.isAdmin) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const success = await storage.deleteBooking(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      res.status(500).json({ message: "Failed to delete booking" });
+    }
+  });
+
+  // Dashboard stats
+  app.get("/api/dashboard/stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const stats = await storage.getDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  app.get("/api/dashboard/room-stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const roomStats = await storage.getRoomStats();
+      res.json(roomStats);
+    } catch (error) {
+      console.error("Error fetching room stats:", error);
+      res.status(500).json({ message: "Failed to fetch room stats" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
