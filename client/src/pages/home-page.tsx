@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +31,8 @@ import {
   Trash2,
   AlertCircle,
   Info,
-  LogOut
+  LogOut,
+  User
 } from "lucide-react";
 
 const bookingFormSchema = insertBookingSchema.extend({
@@ -64,6 +66,7 @@ export default function HomePage() {
   const [activeScreen, setActiveScreen] = useState("dashboard");
   const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [newRoomOpen, setNewRoomOpen] = useState(false);
+  const [showAllBookings, setShowAllBookings] = useState(false);
 
   // Queries
   const { data: dashboardStats, isLoading: statsLoading } = useQuery<DashboardStats>({
@@ -79,7 +82,7 @@ export default function HomePage() {
   });
 
   const { data: bookings, isLoading: bookingsLoading } = useQuery<BookingWithDetails[]>({
-    queryKey: ["/api/bookings"],
+    queryKey: [user?.isAdmin && showAllBookings ? "/api/bookings/all" : "/api/bookings"],
   });
 
   // Mutations
@@ -716,8 +719,28 @@ export default function HomePage() {
         {activeScreen === "bookings" && (
           <div className="flex-1 overflow-auto p-6">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Meus Agendamentos</h1>
-              <p className="text-gray-600">Gerencie seus agendamentos de salas</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {user?.isAdmin && showAllBookings ? "Todos os Agendamentos" : "Meus Agendamentos"}
+                  </h1>
+                  <p className="text-gray-600">
+                    {user?.isAdmin && showAllBookings ? "Visualize todos os agendamentos do sistema" : "Gerencie seus agendamentos de salas"}
+                  </p>
+                </div>
+                {user?.isAdmin && (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={showAllBookings}
+                      onCheckedChange={setShowAllBookings}
+                      id="show-all-bookings"
+                    />
+                    <label htmlFor="show-all-bookings" className="text-sm text-gray-600">
+                      Ver todos
+                    </label>
+                  </div>
+                )}
+              </div>
             </div>
 
             <Tabs defaultValue="upcoming" className="w-full">

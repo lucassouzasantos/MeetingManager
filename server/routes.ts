@@ -77,12 +77,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const bookings = req.user?.isAdmin 
-        ? await storage.getBookings()
-        : await storage.getBookingsByUser(req.user!.id);
+      // Return only user's own bookings for regular users
+      const bookings = await storage.getBookingsByUser(req.user.id);
       res.json(bookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  // Admin endpoint to get all bookings
+  app.get("/api/bookings/all", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const bookings = await storage.getBookings();
+      res.json(bookings);
+    } catch (error) {
+      console.error("Error fetching all bookings:", error);
       res.status(500).json({ message: "Failed to fetch bookings" });
     }
   });
