@@ -55,12 +55,14 @@ export function setupAuth(app: Express) {
         }
         
         const isValidPassword = await comparePasswords(password, user.password);
+        
         if (!isValidPassword) {
           return done(null, false, { message: "Senha incorreta" });
         }
         
         return done(null, user);
       } catch (error) {
+        console.error("Login error:", error);
         return done(error);
       }
     }),
@@ -145,11 +147,6 @@ export function setupAuth(app: Express) {
         });
       }
 
-      // TODO: In a real application, you would:
-      // 1. Generate a secure reset token
-      // 2. Store it in the database with expiration
-      // 3. Send an email with the reset link
-      
       console.log(`Password recovery requested for user: ${user.email}`);
       
       res.status(200).json({ 
@@ -160,4 +157,6 @@ export function setupAuth(app: Express) {
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
+
+
 }

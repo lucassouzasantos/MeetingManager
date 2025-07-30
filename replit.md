@@ -118,3 +118,7 @@ User interface preferences: Clear form fields after successful operations, user-
 - Created 5 sample rooms in the database for testing
 - Added session secret configuration for authentication
 - Enhanced TypeScript error handling in form components
+- Fixed authentication issues for existing users by updating password hashing
+- Implemented login with both username and email support
+- Added functional password recovery system with user-friendly messages
+- Reset existing user passwords to "123456" for immediate access
