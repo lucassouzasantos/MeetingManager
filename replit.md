@@ -5,6 +5,7 @@ This is a full-stack room booking system built with Express.js backend and React
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+User interface preferences: Clear form fields after successful operations, user-friendly error messages for booking conflicts.
 
 ## System Architecture
 
@@ -107,3 +108,13 @@ Preferred communication style: Simple, everyday language.
 4. **TanStack Query**: Implemented for efficient server state management and caching
 5. **Zod Validation**: Used for runtime type validation on both client and server
 6. **PostgreSQL**: Chosen for ACID compliance and robust relational data handling
+
+## Recent Changes
+
+### January 30, 2025 - Error Handling and UX Improvements
+- Fixed React hooks error in authentication page using useEffect
+- Improved error handling for booking conflicts with user-friendly messages
+- Added form field clearing after successful booking/room creation
+- Created 5 sample rooms in the database for testing
+- Added session secret configuration for authentication
+- Enhanced TypeScript error handling in form components

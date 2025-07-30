@@ -85,13 +85,34 @@ export default function HomePage() {
   // Mutations
   const createBookingMutation = useMutation({
     mutationFn: async (data: BookingForm) => {
-      const res = await apiRequest("POST", "/api/bookings", data);
-      return await res.json();
+      try {
+        const res = await apiRequest("POST", "/api/bookings", data);
+        return await res.json();
+      } catch (error: any) {
+        // Handle specific HTTP status codes
+        if (error.message.includes('409:')) {
+          throw new Error('Esta sala já está reservada para este horário. Por favor, escolha outro horário ou sala.');
+        } else if (error.message.includes('400:')) {
+          throw new Error('Dados do agendamento inválidos. Verifique se o horário de término é posterior ao de início.');
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/room-stats"] });
+      
+      // Clear the form fields
+      bookingForm.reset({
+        title: "",
+        description: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+        roomId: "",
+      });
+      
       setNewBookingOpen(false);
       toast({
         title: "Agendamento criado",
@@ -115,6 +136,14 @@ export default function HomePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/room-stats"] });
+      
+      // Clear the form fields
+      roomForm.reset({
+        name: "",
+        location: "",
+        capacity: 1,
+      });
+      
       setNewRoomOpen(false);
       toast({
         title: "Sala criada",
