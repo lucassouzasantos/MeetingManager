@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
 import { insertUserSchema } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -39,6 +42,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
+  const { toast } = useToast();
 
   // Redirect if already logged in - use useEffect to avoid setState during render
   React.useEffect(() => {
@@ -93,10 +97,30 @@ export default function AuthPage() {
     }
   };
 
+  const recoveryMutation = useMutation({
+    mutationFn: async (data: RecoveryForm) => {
+      const res = await apiRequest("POST", "/api/forgot-password", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Recuperação enviada",
+        description: data.message,
+      });
+      setRecoveryOpen(false);
+      recoveryForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro na recuperação",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onRecovery = async (data: RecoveryForm) => {
-    // TODO: Implement password recovery
-    console.log("Recovery for:", data.email);
-    setRecoveryOpen(false);
+    await recoveryMutation.mutateAsync(data);
   };
 
   return (
@@ -222,7 +246,12 @@ export default function AuthPage() {
                                   >
                                     Cancelar
                                   </Button>
-                                  <Button type="submit" className="flex-1 bg-warning hover:bg-yellow-600">
+                                  <Button 
+                                    type="submit" 
+                                    className="flex-1 bg-warning hover:bg-yellow-600"
+                                    disabled={recoveryMutation.isPending}
+                                  >
+                                    {recoveryMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Enviar
                                   </Button>
                                 </div>

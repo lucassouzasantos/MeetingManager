@@ -43,40 +43,81 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
-      if (!user || !(await comparePasswords(password, user.password))) {
-        return done(null, false);
-      } else {
+      try {
+        // Try to find user by username first, then by email
+        let user = await storage.getUserByUsername(username);
+        if (!user) {
+          user = await storage.getUserByEmail(username);
+        }
+        
+        if (!user) {
+          return done(null, false, { message: "Usuário não encontrado" });
+        }
+        
+        const isValidPassword = await comparePasswords(password, user.password);
+        if (!isValidPassword) {
+          return done(null, false, { message: "Senha incorreta" });
+        }
+        
         return done(null, user);
+      } catch (error) {
+        return done(error);
       }
     }),
   );
 
   passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser(async (id: number, done) => {
-    const user = await storage.getUser(id);
-    done(null, user);
+  passport.deserializeUser(async (id: string, done) => {
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      done(error);
+    }
   });
 
   app.post("/api/register", async (req, res, next) => {
-    const existingUser = await storage.getUserByUsername(req.body.username);
-    if (existingUser) {
-      return res.status(400).send("Username already exists");
+    try {
+      const existingUserByUsername = await storage.getUserByUsername(req.body.username);
+      if (existingUserByUsername) {
+        return res.status(400).json({ message: "Nome de usuário já existe" });
+      }
+
+      const existingUserByEmail = await storage.getUserByEmail(req.body.email);
+      if (existingUserByEmail) {
+        return res.status(400).json({ message: "E-mail já está em uso" });
+      }
+
+      const user = await storage.createUser({
+        ...req.body,
+        password: await hashPassword(req.body.password),
+      });
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
     }
-
-    const user = await storage.createUser({
-      ...req.body,
-      password: await hashPassword(req.body.password),
-    });
-
-    req.login(user, (err) => {
-      if (err) return next(err);
-      res.status(201).json(user);
-    });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Erro interno do servidor" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Credenciais inválidas" });
+      }
+      req.login(user, (err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Erro interno do servidor" });
+        }
+        res.status(200).json(user);
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {
@@ -89,5 +130,34 @@ export function setupAuth(app: Express) {
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
+  });
+
+  // Password recovery endpoint
+  app.post("/api/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.status(200).json({ 
+          message: "Se este e-mail estiver cadastrado, você receberá instruções para redefinir sua senha." 
+        });
+      }
+
+      // TODO: In a real application, you would:
+      // 1. Generate a secure reset token
+      // 2. Store it in the database with expiration
+      // 3. Send an email with the reset link
+      
+      console.log(`Password recovery requested for user: ${user.email}`);
+      
+      res.status(200).json({ 
+        message: "Se este e-mail estiver cadastrado, você receberá instruções para redefinir sua senha." 
+      });
+    } catch (error) {
+      console.error("Password recovery error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
   });
 }
