@@ -358,6 +358,7 @@ export default function HomePage() {
                             placeholder="Descreva o objetivo da reunião..."
                             className="resize-none"
                             {...field}
+                            value={field.value || ""}
                           />
                         </FormControl>
                         <FormMessage />
