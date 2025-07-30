@@ -127,3 +127,4 @@ User interface preferences: Clear form fields after successful operations, user-
 - **ADDED:** Admin toggle switch to view all bookings vs own bookings
 - **ADDED:** Separate `/api/bookings/all` endpoint for admin access to all bookings
 - Made Miriam an admin user for testing admin functionality
+- Added Lucas (lucassouza@pindo.com.py) as general administrator
