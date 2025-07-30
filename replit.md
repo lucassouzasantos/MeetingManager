@@ -122,3 +122,8 @@ User interface preferences: Clear form fields after successful operations, user-
 - Implemented login with both username and email support
 - Added functional password recovery system with user-friendly messages
 - Reset existing user passwords to "123456" for immediate access
+- **FIXED:** Users now see only their own bookings in "Meus Agendamentos"
+- **FIXED:** Backend properly filters bookings by user ID via `/api/bookings` endpoint
+- **ADDED:** Admin toggle switch to view all bookings vs own bookings
+- **ADDED:** Separate `/api/bookings/all` endpoint for admin access to all bookings
+- Made Miriam an admin user for testing admin functionality

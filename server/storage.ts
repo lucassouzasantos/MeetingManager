@@ -1,6 +1,6 @@
 import { users, rooms, bookings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type BookingWithDetails } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, count, sql } from "drizzle-orm";
+import { eq, ne, and, desc, count, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -36,11 +36,11 @@ export interface IStorage {
     activeUsers: number;
   }>;
 
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
@@ -193,27 +193,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkBookingConflict(roomId: string, date: string, startTime: string, endTime: string, excludeBookingId?: string): Promise<boolean> {
-    let query = db
-      .select()
-      .from(bookings)
-      .where(
-        and(
-          eq(bookings.roomId, roomId),
-          eq(bookings.date, date),
-          eq(bookings.status, "confirmed"),
-          sql`(
-            (${startTime} >= start_time AND ${startTime} < end_time) OR
-            (${endTime} > start_time AND ${endTime} <= end_time) OR
-            (${startTime} <= start_time AND ${endTime} >= end_time)
-          )`
-        )
-      );
+    const conditions = [
+      eq(bookings.roomId, roomId),
+      eq(bookings.date, date),
+      eq(bookings.status, "confirmed"),
+      sql`(
+        (${startTime} >= start_time AND ${startTime} < end_time) OR
+        (${endTime} > start_time AND ${endTime} <= end_time) OR
+        (${startTime} <= start_time AND ${endTime} >= end_time)
+      )`
+    ];
 
     if (excludeBookingId) {
-      query = query.where(sql`id != ${excludeBookingId}`);
+      conditions.push(ne(bookings.id, excludeBookingId));
     }
 
-    const conflicts = await query;
+    const conflicts = await db
+      .select()
+      .from(bookings)
+      .where(and(...conditions));
+      
     return conflicts.length > 0;
   }
 
