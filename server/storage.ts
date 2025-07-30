@@ -13,6 +13,8 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserPassword(id: string, hashedPassword: string): Promise<void>;
+  getAllUsers(): Promise<User[]>;
+  updateUserAdminStatus(id: string, isAdmin: boolean): Promise<boolean>;
   
   getRooms(): Promise<Room[]>;
   getRoom(id: string): Promise<Room | undefined>;
@@ -78,6 +80,28 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ password: hashedPassword })
       .where(eq(users.id, id));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select({
+      id: users.id,
+      username: users.username,
+      fullName: users.fullName,
+      position: users.position,
+      email: users.email,
+      isAdmin: users.isAdmin,
+      createdAt: users.createdAt,
+      password: sql`''`.as('password') // Don't return password
+    }).from(users).orderBy(users.fullName);
+  }
+
+  async updateUserAdminStatus(id: string, isAdmin: boolean): Promise<boolean> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ isAdmin })
+      .where(eq(users.id, id))
+      .returning();
+    return !!updatedUser;
   }
 
   // Room methods

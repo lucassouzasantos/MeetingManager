@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
-import { insertBookingSchema, insertRoomSchema, type Room, type BookingWithDetails } from "@shared/schema";
+import { insertBookingSchema, insertRoomSchema, type Room, type BookingWithDetails, type User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ import {
   AlertCircle,
   Info,
   LogOut,
-  User
+  User as UserIcon
 } from "lucide-react";
 
 const bookingFormSchema = insertBookingSchema.extend({
@@ -42,9 +42,15 @@ const bookingFormSchema = insertBookingSchema.extend({
 });
 
 const roomFormSchema = insertRoomSchema;
+const editRoomFormSchema = insertRoomSchema.pick({
+  name: true,
+  location: true,
+  capacity: true,
+});
 
 type BookingForm = z.infer<typeof bookingFormSchema>;
 type RoomForm = z.infer<typeof roomFormSchema>;
+type EditRoomForm = z.infer<typeof editRoomFormSchema>;
 
 interface DashboardStats {
   todayBookings: number;
@@ -66,6 +72,8 @@ export default function HomePage() {
   const [activeScreen, setActiveScreen] = useState("dashboard");
   const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [newRoomOpen, setNewRoomOpen] = useState(false);
+  const [editRoomOpen, setEditRoomOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [showAllBookings, setShowAllBookings] = useState(false);
 
   // Queries
@@ -83,6 +91,11 @@ export default function HomePage() {
 
   const { data: bookings, isLoading: bookingsLoading } = useQuery<BookingWithDetails[]>({
     queryKey: [user?.isAdmin && showAllBookings ? "/api/bookings/all" : "/api/bookings"],
+  });
+
+  const { data: allUsers, isLoading: usersLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    enabled: user?.isAdmin,
   });
 
   // Mutations
@@ -204,6 +217,50 @@ export default function HomePage() {
     },
   });
 
+  const updateRoomMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: EditRoomForm }) => {
+      const res = await apiRequest("PATCH", `/api/rooms/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/room-stats"] });
+      setEditRoomOpen(false);
+      setEditingRoom(null);
+      toast({
+        title: "Sala atualizada",
+        description: "As informações da sala foram atualizadas com sucesso!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar sala",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateUserAdminMutation = useMutation({
+    mutationFn: async ({ id, isAdmin }: { id: string; isAdmin: boolean }) => {
+      await apiRequest("PATCH", `/api/users/${id}/admin`, { isAdmin });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Permissões atualizadas",
+        description: "As permissões do usuário foram atualizadas com sucesso!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar permissões",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Forms
   const bookingForm = useForm<BookingForm>({
     resolver: zodResolver(bookingFormSchema),
@@ -226,12 +283,36 @@ export default function HomePage() {
     },
   });
 
+  const editRoomForm = useForm<EditRoomForm>({
+    resolver: zodResolver(editRoomFormSchema),
+    defaultValues: {
+      name: "",
+      location: "",
+      capacity: 1,
+    },
+  });
+
   const onCreateBooking = async (data: BookingForm) => {
     await createBookingMutation.mutateAsync(data);
   };
 
   const onCreateRoom = async (data: RoomForm) => {
     await createRoomMutation.mutateAsync(data);
+  };
+
+  const onEditRoom = async (data: EditRoomForm) => {
+    if (!editingRoom) return;
+    await updateRoomMutation.mutateAsync({ id: editingRoom.id, data });
+  };
+
+  const handleEditRoom = (room: Room) => {
+    setEditingRoom(room);
+    editRoomForm.reset({
+      name: room.name,
+      location: room.location,
+      capacity: room.capacity,
+    });
+    setEditRoomOpen(true);
   };
 
   const handleLogout = async () => {
@@ -440,14 +521,24 @@ export default function HomePage() {
           </Button>
 
           {user.isAdmin && (
-            <Button
-              variant={activeScreen === "rooms" ? "default" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => setActiveScreen("rooms")}
-            >
-              <Settings className="mr-3 h-4 w-4" />
-              Gerenciar Salas
-            </Button>
+            <>
+              <Button
+                variant={activeScreen === "rooms" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setActiveScreen("rooms")}
+              >
+                <Settings className="mr-3 h-4 w-4" />
+                Gerenciar Salas
+              </Button>
+              <Button
+                variant={activeScreen === "users" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setActiveScreen("users")}
+              >
+                <Users className="mr-3 h-4 w-4" />
+                Gerenciar Usuários
+              </Button>
+            </>
           )}
         </nav>
 
@@ -886,6 +977,73 @@ export default function HomePage() {
           </div>
         )}
 
+        {activeScreen === "users" && user?.isAdmin && (
+          <div className="flex-1 overflow-auto p-6">
+            <div className="mb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Gerenciar Usuários</h1>
+                  <p className="text-gray-600">Controle as permissões de administrador dos usuários</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              {usersLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
+                </div>
+              ) : allUsers?.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <UserIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Nenhum usuário encontrado</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                allUsers?.map((userItem) => (
+                  <Card key={userItem.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                            <UserIcon className="h-6 w-6 text-gray-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{userItem.fullName}</h3>
+                            <p className="text-sm text-gray-500">{userItem.email}</p>
+                            <p className="text-xs text-gray-400">{userItem.position}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-600">Administrador</span>
+                            <Switch
+                              checked={userItem.isAdmin}
+                              onCheckedChange={(checked) => 
+                                updateUserAdminMutation.mutate({ 
+                                  id: userItem.id, 
+                                  isAdmin: checked 
+                                })
+                              }
+                              disabled={updateUserAdminMutation.isPending || userItem.id === user.id}
+                            />
+                          </div>
+                          {userItem.isAdmin && (
+                            <Badge variant="default">Admin</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {activeScreen === "rooms" && user.isAdmin && (
           <div className="flex-1 overflow-auto p-6">
             <div className="mb-6">
@@ -1029,6 +1187,13 @@ export default function HomePage() {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => handleEditRoom(room)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => deleteRoomMutation.mutate(room.id)}
                               disabled={deleteRoomMutation.isPending}
                             >
@@ -1071,6 +1236,94 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Edit Room Dialog */}
+      <Dialog open={editRoomOpen} onOpenChange={setEditRoomOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-primary" />
+              Editar Sala
+            </DialogTitle>
+            <DialogDescription>
+              Atualize as informações da sala
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editRoomForm}>
+            <form onSubmit={editRoomForm.handleSubmit(onEditRoom)} className="space-y-4">
+              <FormField
+                control={editRoomForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome da Sala *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Sala Executive Premium" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editRoomForm.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Localização *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: 3º Andar - Ala Oeste" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editRoomForm.control}
+                name="capacity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Capacidade Máxima *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        max="100"
+                        placeholder="Ex: 20"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setEditRoomOpen(false);
+                    setEditingRoom(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1"
+                  disabled={updateRoomMutation.isPending}
+                >
+                  Atualizar Sala
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
