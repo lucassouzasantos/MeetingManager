@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -331,6 +331,84 @@ export default function HomePage() {
   const topRooms = roomStats?.slice(0, 3) || [];
   const leastUsedRooms = roomStats?.slice(-3).reverse() || [];
 
+  // Generate available time slots
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 8; hour <= 18; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+    }
+    return slots;
+  };
+
+  // Get available time slots for a specific date and room
+  const getAvailableTimeSlots = (date: string, roomId: string, excludeBookingId?: string) => {
+    if (!date || !roomId || !bookings) return generateTimeSlots();
+
+    const dayBookings = bookings.filter(booking => 
+      booking.date === date && 
+      booking.roomId === roomId && 
+      booking.id !== excludeBookingId &&
+      booking.status === 'confirmed'
+    );
+
+    const allSlots = generateTimeSlots();
+    
+    return allSlots.filter(slot => {
+      const slotTime = new Date(`${date}T${slot}:00`);
+      
+      return !dayBookings.some(booking => {
+        const startTime = new Date(`${booking.date}T${booking.startTime}:00`);
+        const endTime = new Date(`${booking.date}T${booking.endTime}:00`);
+        return slotTime >= startTime && slotTime < endTime;
+      });
+    });
+  };
+
+  // Get available end times based on start time
+  const getAvailableEndTimes = (date: string, roomId: string, startTime: string) => {
+    if (!date || !roomId || !startTime) return [];
+
+    const availableSlots = getAvailableTimeSlots(date, roomId);
+    const startIndex = availableSlots.indexOf(startTime);
+    
+    if (startIndex === -1) return [];
+
+    const endTimes = [];
+    for (let i = startIndex + 1; i < availableSlots.length; i++) {
+      endTimes.push(availableSlots[i]);
+      // Stop if there's a gap in available slots
+      if (i < availableSlots.length - 1) {
+        const currentSlot = new Date(`${date}T${availableSlots[i]}:00`);
+        const nextSlot = new Date(`${date}T${availableSlots[i + 1]}:00`);
+        const timeDiff = (nextSlot.getTime() - currentSlot.getTime()) / (1000 * 60);
+        if (timeDiff > 30) break;
+      }
+    }
+    
+    return endTimes;
+  };
+
+  // Watch form values for dynamic updates
+  const watchedDate = bookingForm.watch("date");
+  const watchedRoomId = bookingForm.watch("roomId");
+  const watchedStartTime = bookingForm.watch("startTime");
+
+  const availableStartTimes = getAvailableTimeSlots(watchedDate, watchedRoomId);
+  const availableEndTimes = getAvailableEndTimes(watchedDate, watchedRoomId, watchedStartTime);
+
+  // Reset end time when date, room, or start time changes
+  React.useEffect(() => {
+    if (watchedDate || watchedRoomId || watchedStartTime) {
+      const currentEndTime = bookingForm.getValues("endTime");
+      if (currentEndTime && !availableEndTimes.includes(currentEndTime)) {
+        bookingForm.setValue("endTime", "");
+      }
+    }
+  }, [watchedDate, watchedRoomId, watchedStartTime, availableEndTimes, bookingForm]);
+
   if (!user) return null;
 
   return (
@@ -436,10 +514,27 @@ export default function HomePage() {
                       name="startTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Início *</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
+                          <FormLabel>Horário de Início *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o horário" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {availableStartTimes.length === 0 ? (
+                                <SelectItem value="none" disabled>
+                                  {watchedDate && watchedRoomId ? "Nenhum horário disponível" : "Selecione primeiro a data e sala"}
+                                </SelectItem>
+                              ) : (
+                                availableStartTimes.map((time) => (
+                                  <SelectItem key={time} value={time}>
+                                    {time}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -450,10 +545,27 @@ export default function HomePage() {
                       name="endTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Término *</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
+                          <FormLabel>Horário de Término *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o horário" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {availableEndTimes.length === 0 ? (
+                                <SelectItem value="none" disabled>
+                                  {watchedStartTime ? "Nenhum horário disponível" : "Selecione primeiro o horário de início"}
+                                </SelectItem>
+                              ) : (
+                                availableEndTimes.map((time) => (
+                                  <SelectItem key={time} value={time}>
+                                    {time}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
