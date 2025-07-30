@@ -331,11 +331,13 @@ export default function HomePage() {
   const topRooms = roomStats?.slice(0, 3) || [];
   const leastUsedRooms = roomStats?.slice(-3).reverse() || [];
 
-  // Generate available time slots
+  // Generate available time slots (8:00 AM to 6:00 PM, every 30 minutes)
   const generateTimeSlots = () => {
     const slots = [];
     for (let hour = 8; hour <= 18; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
+        // Don't include 18:30 as it's past closing time
+        if (hour === 18 && minute === 30) break;
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         slots.push(timeString);
       }
@@ -343,52 +345,74 @@ export default function HomePage() {
     return slots;
   };
 
-  // Get available time slots for a specific date and room
-  const getAvailableTimeSlots = (date: string, roomId: string, excludeBookingId?: string) => {
-    if (!date || !roomId || !bookings) return generateTimeSlots();
+  // Check if a time slot conflicts with existing bookings
+  const isTimeSlotAvailable = (date: string, roomId: string, timeSlot: string, excludeBookingId?: string) => {
+    if (!bookings || !date || !roomId) return true;
 
     const dayBookings = bookings.filter(booking => 
       booking.date === date && 
       booking.roomId === roomId && 
-      booking.id !== excludeBookingId &&
-      booking.status === 'confirmed'
+      booking.status === 'confirmed' &&
+      booking.id !== excludeBookingId
     );
 
-    const allSlots = generateTimeSlots();
-    
-    return allSlots.filter(slot => {
-      const slotTime = new Date(`${date}T${slot}:00`);
-      
-      return !dayBookings.some(booking => {
-        const startTime = new Date(`${booking.date}T${booking.startTime}:00`);
-        const endTime = new Date(`${booking.date}T${booking.endTime}:00`);
-        return slotTime >= startTime && slotTime < endTime;
-      });
+    const slotTime = new Date(`${date}T${timeSlot}:00`);
+
+    return !dayBookings.some(booking => {
+      const startTime = new Date(`${booking.date}T${booking.startTime}:00`);
+      const endTime = new Date(`${booking.date}T${booking.endTime}:00`);
+      // Check if the slot time falls within any existing booking
+      return slotTime >= startTime && slotTime < endTime;
     });
+  };
+
+  // Get available start time slots for a specific date and room
+  const getAvailableStartTimes = (date: string, roomId: string) => {
+    if (!date || !roomId) return [];
+    
+    const allSlots = generateTimeSlots();
+    return allSlots.filter(slot => isTimeSlotAvailable(date, roomId, slot));
   };
 
   // Get available end times based on start time
   const getAvailableEndTimes = (date: string, roomId: string, startTime: string) => {
     if (!date || !roomId || !startTime) return [];
 
-    const availableSlots = getAvailableTimeSlots(date, roomId);
-    const startIndex = availableSlots.indexOf(startTime);
+    const allSlots = generateTimeSlots();
+    const startIndex = allSlots.indexOf(startTime);
     
     if (startIndex === -1) return [];
 
-    const endTimes = [];
-    for (let i = startIndex + 1; i < availableSlots.length; i++) {
-      endTimes.push(availableSlots[i]);
-      // Stop if there's a gap in available slots
-      if (i < availableSlots.length - 1) {
-        const currentSlot = new Date(`${date}T${availableSlots[i]}:00`);
-        const nextSlot = new Date(`${date}T${availableSlots[i + 1]}:00`);
-        const timeDiff = (nextSlot.getTime() - currentSlot.getTime()) / (1000 * 60);
-        if (timeDiff > 30) break;
+    // Get all possible end times (must be after start time)
+    const possibleEndTimes = allSlots.slice(startIndex + 1);
+    
+    // Filter end times that don't conflict with existing bookings
+    const availableEndTimes = [];
+    
+    for (const endTime of possibleEndTimes) {
+      // Check if the entire time range from startTime to endTime is available
+      const startSlotIndex = allSlots.indexOf(startTime);
+      const endSlotIndex = allSlots.indexOf(endTime);
+      
+      let isRangeAvailable = true;
+      
+      // Check each 30-minute slot in the range
+      for (let i = startSlotIndex; i < endSlotIndex; i++) {
+        if (!isTimeSlotAvailable(date, roomId, allSlots[i])) {
+          isRangeAvailable = false;
+          break;
+        }
+      }
+      
+      if (isRangeAvailable) {
+        availableEndTimes.push(endTime);
+      } else {
+        // Stop at first conflict to ensure continuous availability
+        break;
       }
     }
     
-    return endTimes;
+    return availableEndTimes;
   };
 
   // Watch form values for dynamic updates
@@ -396,7 +420,7 @@ export default function HomePage() {
   const watchedRoomId = bookingForm.watch("roomId");
   const watchedStartTime = bookingForm.watch("startTime");
 
-  const availableStartTimes = getAvailableTimeSlots(watchedDate, watchedRoomId);
+  const availableStartTimes = getAvailableStartTimes(watchedDate, watchedRoomId);
   const availableEndTimes = getAvailableEndTimes(watchedDate, watchedRoomId, watchedStartTime);
 
   // Reset end time when date, room, or start time changes
