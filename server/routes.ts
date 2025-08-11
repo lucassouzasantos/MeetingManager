@@ -252,10 +252,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard stats
+  // Dashboard stats - Admin only
   app.get("/api/dashboard/stats", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
+    }
+
+    if (!req.user?.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
     }
 
     try {
@@ -270,6 +274,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/room-stats", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
+    }
+
+    if (!req.user?.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
     }
 
     try {

@@ -76,13 +76,15 @@ export default function HomePage() {
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [showAllBookings, setShowAllBookings] = useState(false);
 
-  // Queries
+  // Queries - Admin only
   const { data: dashboardStats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
+    enabled: user?.isAdmin,
   });
 
   const { data: roomStats, isLoading: roomStatsLoading } = useQuery<RoomStats[]>({
     queryKey: ["/api/dashboard/room-stats"],
+    enabled: user?.isAdmin,
   });
 
   const { data: rooms, isLoading: roomsLoading } = useQuery<Room[]>({
@@ -116,8 +118,10 @@ export default function HomePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/room-stats"] });
+      if (user?.isAdmin) {
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/room-stats"] });
+      }
       
       // Clear the form fields
       bookingForm.reset({
@@ -720,155 +724,177 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Agendamentos Hoje</p>
-                      {statsLoading ? (
-                        <Skeleton className="h-8 w-16" />
-                      ) : (
-                        <p className="text-2xl font-bold text-gray-900">{dashboardStats?.todayBookings || 0}</p>
-                      )}
+            {/* Statistics Cards - Admin Only */}
+            {user.isAdmin && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">Agendamentos Hoje</p>
+                        {statsLoading ? (
+                          <Skeleton className="h-8 w-16" />
+                        ) : (
+                          <p className="text-2xl font-bold text-gray-900">{dashboardStats?.todayBookings || 0}</p>
+                        )}
+                      </div>
+                      <div className="w-12 h-12 bg-primary bg-opacity-10 rounded-full flex items-center justify-center">
+                        <CalendarDays className="text-primary h-5 w-5" />
+                      </div>
                     </div>
-                    <div className="w-12 h-12 bg-primary bg-opacity-10 rounded-full flex items-center justify-center">
-                      <CalendarDays className="text-primary h-5 w-5" />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">Salas Ativas</p>
+                        {statsLoading ? (
+                          <Skeleton className="h-8 w-16" />
+                        ) : (
+                          <p className="text-2xl font-bold text-gray-900">{dashboardStats?.activeRooms || 0}</p>
+                        )}
+                      </div>
+                      <div className="w-12 h-12 bg-success bg-opacity-10 rounded-full flex items-center justify-center">
+                        <DoorOpen className="text-success h-5 w-5" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">Taxa de Ocupação</p>
+                        {statsLoading ? (
+                          <Skeleton className="h-8 w-16" />
+                        ) : (
+                          <p className="text-2xl font-bold text-gray-900">{dashboardStats?.occupancyRate || 0}%</p>
+                        )}
+                      </div>
+                      <div className="w-12 h-12 bg-warning bg-opacity-10 rounded-full flex items-center justify-center">
+                        <ChartPie className="text-warning h-5 w-5" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">Usuários Ativos</p>
+                        {statsLoading ? (
+                          <Skeleton className="h-8 w-16" />
+                        ) : (
+                          <p className="text-2xl font-bold text-gray-900">{dashboardStats?.activeUsers || 0}</p>
+                        )}
+                      </div>
+                      <div className="w-12 h-12 bg-secondary bg-opacity-10 rounded-full flex items-center justify-center">
+                        <Users className="text-secondary h-5 w-5" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Room Usage Statistics - Admin Only */}
+            {user.isAdmin && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Salas Mais Reservadas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {roomStatsLoading ? (
+                      <div className="space-y-4">
+                        {[1, 2, 3].map((i) => (
+                          <Skeleton key={i} className="h-16 w-full" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {topRooms.map((room, index) => (
+                          <div key={room.roomId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${
+                                index === 0 ? 'bg-primary' : index === 1 ? 'bg-secondary' : 'bg-success'
+                              }`}>
+                                {index + 1}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{room.roomName}</p>
+                                <p className="text-sm text-gray-500">{room.location}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-gray-900">{room.bookingCount}</p>
+                              <p className="text-sm text-gray-500">agendamentos</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Salas Menos Utilizadas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {roomStatsLoading ? (
+                      <div className="space-y-4">
+                        {[1, 2, 3].map((i) => (
+                          <Skeleton key={i} className="h-16 w-full" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {leastUsedRooms.map((room) => (
+                          <div key={room.roomId} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-error rounded-full flex items-center justify-center">
+                                <AlertCircle className="text-white h-4 w-4" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{room.roomName}</p>
+                                <p className="text-sm text-gray-500">{room.location}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-error">{room.bookingCount}</p>
+                              <p className="text-sm text-gray-500">agendamentos</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Info card for non-admin users */}
+            {!user.isAdmin && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-6">
+                  <div className="flex items-start space-x-3">
+                    <Info className="h-5 w-5 text-blue-500 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-medium text-blue-900 mb-1">Dashboard Administrativo</h4>
+                      <p className="text-sm text-blue-700">
+                        As estatísticas detalhadas e métricas de uso das salas são visíveis apenas para administradores. 
+                        Para visualizar essas informações, entre em contato com um administrador do sistema.
+                      </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Salas Ativas</p>
-                      {statsLoading ? (
-                        <Skeleton className="h-8 w-16" />
-                      ) : (
-                        <p className="text-2xl font-bold text-gray-900">{dashboardStats?.activeRooms || 0}</p>
-                      )}
-                    </div>
-                    <div className="w-12 h-12 bg-success bg-opacity-10 rounded-full flex items-center justify-center">
-                      <DoorOpen className="text-success h-5 w-5" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Taxa de Ocupação</p>
-                      {statsLoading ? (
-                        <Skeleton className="h-8 w-16" />
-                      ) : (
-                        <p className="text-2xl font-bold text-gray-900">{dashboardStats?.occupancyRate || 0}%</p>
-                      )}
-                    </div>
-                    <div className="w-12 h-12 bg-warning bg-opacity-10 rounded-full flex items-center justify-center">
-                      <ChartPie className="text-warning h-5 w-5" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Usuários Ativos</p>
-                      {statsLoading ? (
-                        <Skeleton className="h-8 w-16" />
-                      ) : (
-                        <p className="text-2xl font-bold text-gray-900">{dashboardStats?.activeUsers || 0}</p>
-                      )}
-                    </div>
-                    <div className="w-12 h-12 bg-secondary bg-opacity-10 rounded-full flex items-center justify-center">
-                      <Users className="text-secondary h-5 w-5" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Room Usage Statistics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Salas Mais Reservadas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {roomStatsLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-16 w-full" />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {topRooms.map((room, index) => (
-                        <div key={room.roomId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${
-                              index === 0 ? 'bg-primary' : index === 1 ? 'bg-secondary' : 'bg-success'
-                            }`}>
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{room.roomName}</p>
-                              <p className="text-sm text-gray-500">{room.location}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-gray-900">{room.bookingCount}</p>
-                            <p className="text-sm text-gray-500">agendamentos</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Salas Menos Utilizadas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {roomStatsLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-16 w-full" />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {leastUsedRooms.map((room) => (
-                        <div key={room.roomId} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-error rounded-full flex items-center justify-center">
-                              <AlertCircle className="text-white h-4 w-4" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{room.roomName}</p>
-                              <p className="text-sm text-gray-500">{room.location}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-error">{room.bookingCount}</p>
-                            <p className="text-sm text-gray-500">agendamentos</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+            )}
 
             {/* Upcoming Bookings */}
             <Card>

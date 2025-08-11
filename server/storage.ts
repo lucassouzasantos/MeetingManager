@@ -91,7 +91,7 @@ export class DatabaseStorage implements IStorage {
       email: users.email,
       isAdmin: users.isAdmin,
       createdAt: users.createdAt,
-      password: sql`''`.as('password') // Don't return password
+      password: sql`''`.mapWith(String).as('password') // Don't return password
     }).from(users).orderBy(users.fullName);
   }
 
@@ -263,25 +263,37 @@ export class DatabaseStorage implements IStorage {
   }> {
     const today = new Date().toISOString().split('T')[0];
     
+    // Agendamentos confirmados para hoje
     const [todayBookingsResult] = await db
       .select({ count: count() })
       .from(bookings)
-      .where(eq(bookings.date, today));
+      .where(and(
+        eq(bookings.date, today),
+        eq(bookings.status, "confirmed")
+      ));
 
+    // Salas ativas
     const [activeRoomsResult] = await db
       .select({ count: count() })
       .from(rooms)
       .where(eq(rooms.isActive, true));
 
+    // Usuários que fizeram pelo menos um agendamento (considerados ativos)
     const [activeUsersResult] = await db
-      .select({ count: count() })
-      .from(users);
+      .select({ count: count(sql`DISTINCT ${bookings.userId}`) })
+      .from(bookings)
+      .where(eq(bookings.status, "confirmed"));
 
-    // Calculate occupancy rate (simplified - rooms with bookings today / total rooms)
+    // Taxa de ocupação: salas com agendamentos hoje / total de salas ativas
     const [occupiedRoomsResult] = await db
       .select({ count: count(sql`DISTINCT ${bookings.roomId}`) })
       .from(bookings)
-      .where(eq(bookings.date, today));
+      .innerJoin(rooms, eq(bookings.roomId, rooms.id))
+      .where(and(
+        eq(bookings.date, today),
+        eq(bookings.status, "confirmed"),
+        eq(rooms.isActive, true)
+      ));
 
     const occupancyRate = activeRoomsResult.count > 0 
       ? Math.round((occupiedRoomsResult.count / activeRoomsResult.count) * 100)
