@@ -331,10 +331,10 @@ export default function HomePage() {
   const topRooms = roomStats?.slice(0, 3) || [];
   const leastUsedRooms = roomStats?.slice(-3).reverse() || [];
 
-  // Generate available time slots (8:00 AM to 6:00 PM, every 30 minutes)
+  // Generate available time slots (7:00 AM to 6:00 PM, every 30 minutes)
   const generateTimeSlots = () => {
     const slots = [];
-    for (let hour = 8; hour <= 18; hour++) {
+    for (let hour = 7; hour <= 18; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         // Don't include 18:30 as it's past closing time
         if (hour === 18 && minute === 30) break;
