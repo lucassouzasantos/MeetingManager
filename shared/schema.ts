@@ -93,3 +93,22 @@ export type BookingWithDetails = Booking & {
   user: User;
   room: Room;
 };
+
+// Form validation schemas
+export const roomFormSchema = insertRoomSchema.extend({
+  capacity: z.number().min(1, "A capacidade deve ser pelo menos 1").max(500, "A capacidade não pode exceder 500 pessoas"),
+});
+
+export const editRoomFormSchema = roomFormSchema;
+
+export const bookingFormSchema = insertBookingSchema.extend({
+  date: z.string().min(1, "Data é obrigatória"),
+  startTime: z.string().min(1, "Horário de início é obrigatório"),
+  endTime: z.string().min(1, "Horário de término é obrigatório"),
+  title: z.string().min(1, "Título é obrigatório").max(100, "Título muito longo"),
+  roomId: z.string().min(1, "Sala é obrigatória"),
+});
+
+export type RoomForm = z.infer<typeof roomFormSchema>;
+export type EditRoomForm = z.infer<typeof editRoomFormSchema>;
+export type BookingForm = z.infer<typeof bookingFormSchema>;

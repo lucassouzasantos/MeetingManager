@@ -1245,7 +1245,7 @@ export default function HomePage() {
                                 <Input 
                                   type="number" 
                                   min="1" 
-                                  max="100"
+                                  max="500"
                                   placeholder="Ex: 15" 
                                   {...field}
                                   onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
@@ -1425,7 +1425,7 @@ export default function HomePage() {
                       <Input 
                         type="number" 
                         min="1" 
-                        max="100"
+                        max="500"
                         placeholder="Ex: 20"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
