@@ -91,8 +91,13 @@ export default function HomePage() {
     queryKey: ["/api/rooms"],
   });
 
-  const { data: bookings, isLoading: bookingsLoading } = useQuery<BookingWithDetails[]>({
-    queryKey: [user?.isAdmin && showAllBookings ? "/api/bookings/all" : "/api/bookings"],
+  // Get all bookings for dashboard, user bookings for "Meus Agendamentos"
+  const { data: allBookings, isLoading: allBookingsLoading } = useQuery<BookingWithDetails[]>({
+    queryKey: ["/api/bookings/all"],
+  });
+
+  const { data: userBookings, isLoading: userBookingsLoading } = useQuery<BookingWithDetails[]>({
+    queryKey: ["/api/bookings"],
   });
 
   const { data: allUsers, isLoading: usersLoading } = useQuery<User[]>({
@@ -118,6 +123,7 @@ export default function HomePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings/all"] });
       if (user?.isAdmin) {
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/room-stats"] });
@@ -185,6 +191,7 @@ export default function HomePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings/all"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
         title: "Agendamento cancelado",
@@ -323,13 +330,17 @@ export default function HomePage() {
     await logoutMutation.mutateAsync();
   };
 
-  // Get future bookings for dashboard
-  const futureBookings = bookings?.filter(booking => {
-    const bookingDate = new Date(booking.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return bookingDate >= today;
-  }).slice(0, 10) || [];
+  // Get all bookings in chronological order for dashboard
+  const dashboardBookings = allBookings?.sort((a, b) => {
+    // Sort by date first, then by start time
+    const dateComparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+    if (dateComparison !== 0) return dateComparison;
+    return a.startTime.localeCompare(b.startTime);
+  }) || [];
+
+  // Use appropriate bookings based on screen
+  const displayBookings = activeScreen === "bookings" ? userBookings : dashboardBookings;
+  const bookingsLoading = activeScreen === "bookings" ? userBookingsLoading : allBookingsLoading;
 
   // Get top and least used rooms
   const topRooms = roomStats?.slice(0, 3) || [];
@@ -351,9 +362,9 @@ export default function HomePage() {
 
   // Check if a time slot conflicts with existing bookings
   const isTimeSlotAvailable = (date: string, roomId: string, timeSlot: string, excludeBookingId?: string) => {
-    if (!bookings || !date || !roomId) return true;
+    if (!allBookings || !date || !roomId) return true;
 
-    const dayBookings = bookings.filter(booking => 
+    const dayBookings = allBookings.filter((booking: BookingWithDetails) => 
       booking.date === date && 
       booking.roomId === roomId && 
       booking.status === 'confirmed' &&
@@ -362,7 +373,7 @@ export default function HomePage() {
 
     const slotTime = new Date(`${date}T${timeSlot}:00`);
 
-    return !dayBookings.some(booking => {
+    return !dayBookings.some((booking: BookingWithDetails) => {
       const startTime = new Date(`${booking.date}T${booking.startTime}:00`);
       const endTime = new Date(`${booking.date}T${booking.endTime}:00`);
       // Check if the slot time falls within any existing booking
@@ -914,10 +925,10 @@ export default function HomePage() {
                       <Skeleton key={i} className="h-20 w-full" />
                     ))}
                   </div>
-                ) : futureBookings.length === 0 ? (
+                ) : dashboardBookings.length === 0 ? (
                   <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Nenhum agendamento futuro encontrado</p>
+                    <p className="text-gray-500">Nenhum agendamento encontrado</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -932,7 +943,7 @@ export default function HomePage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {futureBookings.map((booking) => (
+                        {dashboardBookings.map((booking: BookingWithDetails) => (
                           <tr key={booking.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
@@ -1009,11 +1020,11 @@ export default function HomePage() {
                       <Skeleton key={i} className="h-32 w-full" />
                     ))}
                   </div>
-                ) : futureBookings.length === 0 ? (
+                ) : displayBookings.length === 0 ? (
                   <Card>
                     <CardContent className="text-center py-8">
                       <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">Nenhum agendamento futuro encontrado</p>
+                      <p className="text-gray-500">Nenhum agendamento encontrado</p>
                       <Button onClick={() => setNewBookingOpen(true)} className="mt-4">
                         <Plus className="mr-2 h-4 w-4" />
                         Criar Agendamento
@@ -1021,7 +1032,7 @@ export default function HomePage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  futureBookings.map((booking) => (
+                  displayBookings.map((booking: BookingWithDetails) => (
                     <Card key={booking.id}>
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
@@ -1076,7 +1087,7 @@ export default function HomePage() {
                       <Skeleton key={i} className="h-32 w-full" />
                     ))}
                   </div>
-                ) : bookings?.length === 0 ? (
+                ) : displayBookings.length === 0 ? (
                   <Card>
                     <CardContent className="text-center py-8">
                       <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -1088,7 +1099,7 @@ export default function HomePage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  bookings?.map((booking) => (
+                  displayBookings.map((booking: BookingWithDetails) => (
                     <Card key={booking.id}>
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
