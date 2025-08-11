@@ -430,37 +430,7 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* Right side - Hero */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-secondary items-center justify-center p-8">
-        <div className="text-center text-white max-w-md">
-          <div className="mb-8">
-            <Calendar className="h-24 w-24 mx-auto mb-6 opacity-90" />
-            <h2 className="text-3xl font-bold mb-4">Bem-vindo ao Sistema de Agendamento</h2>
-            <p className="text-lg opacity-90 mb-6">
-              Organize suas reuniões de forma eficiente e profissional
-            </p>
-          </div>
-          
-          <div className="space-y-4 text-left">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Reserve salas de reunião facilmente</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Visualize disponibilidade em tempo real</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Gerencie seus agendamentos</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Acesso administrativo para gestores</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      
     </div>
   );
 }
