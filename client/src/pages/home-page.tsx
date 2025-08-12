@@ -330,6 +330,12 @@ export default function HomePage() {
     await logoutMutation.mutateAsync();
   };
 
+  // Helper function to format date without timezone issues
+  const formatDate = (dateString: string) => {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   // Get future bookings in chronological order for dashboard
   const dashboardBookings = allBookings?.filter(booking => {
     const bookingDateTime = new Date(`${booking.date}T${booking.endTime}:00`);
@@ -962,7 +968,7 @@ export default function HomePage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               <div>
-                                <p>{new Date(booking.date).toLocaleDateString('pt-BR')}</p>
+                                <p>{formatDate(booking.date)}</p>
                                 <p className="text-xs text-gray-500">{booking.startTime} - {booking.endTime}</p>
                               </div>
                             </td>
@@ -1024,7 +1030,7 @@ export default function HomePage() {
                       <Skeleton key={i} className="h-32 w-full" />
                     ))}
                   </div>
-                ) : displayBookings.length === 0 ? (
+                ) : !displayBookings || displayBookings.length === 0 ? (
                   <Card>
                     <CardContent className="text-center py-8">
                       <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -1049,7 +1055,7 @@ export default function HomePage() {
                             <div className="flex items-center space-x-6 text-sm text-gray-500">
                               <div className="flex items-center space-x-2">
                                 <Calendar className="h-4 w-4" />
-                                <span>{new Date(booking.date).toLocaleDateString('pt-BR')}</span>
+                                <span>{formatDate(booking.date)}</span>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Clock className="h-4 w-4" />
@@ -1091,7 +1097,7 @@ export default function HomePage() {
                       <Skeleton key={i} className="h-32 w-full" />
                     ))}
                   </div>
-                ) : displayBookings.length === 0 ? (
+                ) : !displayBookings || displayBookings.length === 0 ? (
                   <Card>
                     <CardContent className="text-center py-8">
                       <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -1116,7 +1122,7 @@ export default function HomePage() {
                             <div className="flex items-center space-x-6 text-sm text-gray-500">
                               <div className="flex items-center space-x-2">
                                 <Calendar className="h-4 w-4" />
-                                <span>{new Date(booking.date).toLocaleDateString('pt-BR')}</span>
+                                <span>{formatDate(booking.date)}</span>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Clock className="h-4 w-4" />
