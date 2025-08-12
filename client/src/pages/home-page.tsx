@@ -330,8 +330,12 @@ export default function HomePage() {
     await logoutMutation.mutateAsync();
   };
 
-  // Get all bookings in chronological order for dashboard
-  const dashboardBookings = allBookings?.sort((a, b) => {
+  // Get future bookings in chronological order for dashboard
+  const dashboardBookings = allBookings?.filter(booking => {
+    const bookingDateTime = new Date(`${booking.date}T${booking.endTime}:00`);
+    const now = new Date();
+    return bookingDateTime > now;
+  }).sort((a, b) => {
     // Sort by date first, then by start time
     const dateComparison = new Date(a.date).getTime() - new Date(b.date).getTime();
     if (dateComparison !== 0) return dateComparison;
@@ -928,7 +932,7 @@ export default function HomePage() {
                 ) : dashboardBookings.length === 0 ? (
                   <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Nenhum agendamento encontrado</p>
+                    <p className="text-gray-500">Nenhum agendamento futuro encontrado</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
