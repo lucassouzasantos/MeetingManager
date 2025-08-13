@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { insertRoomSchema, insertBookingSchema } from "@shared/schema";
 import { z } from "zod";
@@ -39,6 +39,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user admin status:", error);
       res.status(500).json({ message: "Failed to update user admin status" });
+    }
+  });
+
+  app.put("/api/users/:id/password", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const { password } = req.body;
+      
+      if (!password || password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
+
+      const hashedPassword = await hashPassword(password);
+      const success = await storage.updateUserPassword(req.params.id, hashedPassword);
+      
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ message: "User password updated successfully" });
+    } catch (error) {
+      console.error("Error updating user password:", error);
+      res.status(500).json({ message: "Failed to update user password" });
     }
   });
 

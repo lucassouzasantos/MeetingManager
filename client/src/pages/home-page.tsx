@@ -32,7 +32,8 @@ import {
   AlertCircle,
   Info,
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  Key
 } from "lucide-react";
 
 const bookingFormSchema = insertBookingSchema.extend({
@@ -48,9 +49,18 @@ const editRoomFormSchema = insertRoomSchema.pick({
   capacity: true,
 });
 
+const changePasswordSchema = z.object({
+  newPassword: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Senhas não coincidem",
+  path: ["confirmPassword"],
+});
+
 type BookingForm = z.infer<typeof bookingFormSchema>;
 type RoomForm = z.infer<typeof roomFormSchema>;
 type EditRoomForm = z.infer<typeof editRoomFormSchema>;
+type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
 interface DashboardStats {
   todayBookings: number;
@@ -74,6 +84,8 @@ export default function HomePage() {
   const [newRoomOpen, setNewRoomOpen] = useState(false);
   const [editRoomOpen, setEditRoomOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showAllBookings, setShowAllBookings] = useState(false);
 
   // Queries - Admin only
@@ -272,6 +284,28 @@ export default function HomePage() {
     },
   });
 
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: { userId: string; newPassword: string }) => {
+      const res = await apiRequest("PUT", `/api/users/${data.userId}/password`, { password: data.newPassword });
+      return await res.json();
+    },
+    onSuccess: () => {
+      changePasswordForm.reset();
+      setChangePasswordOpen(false);
+      toast({
+        title: "Senha alterada",
+        description: "A senha do usuário foi alterada com sucesso!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao alterar senha",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Forms
   const bookingForm = useForm<BookingForm>({
     resolver: zodResolver(bookingFormSchema),
@@ -303,6 +337,14 @@ export default function HomePage() {
     },
   });
 
+  const changePasswordForm = useForm<ChangePasswordForm>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: "",
+    }
+  });
+
   const onCreateBooking = async (data: BookingForm) => {
     await createBookingMutation.mutateAsync(data);
   };
@@ -328,6 +370,20 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
+  };
+
+  const handleChangePassword = (userItem: User) => {
+    setSelectedUser(userItem);
+    changePasswordForm.reset();
+    setChangePasswordOpen(true);
+  };
+
+  const onChangePassword = async (data: ChangePasswordForm) => {
+    if (!selectedUser) return;
+    await changePasswordMutation.mutateAsync({ 
+      userId: selectedUser.id, 
+      newPassword: data.newPassword 
+    });
   };
 
   // Helper function to format date without timezone issues
@@ -1201,6 +1257,16 @@ export default function HomePage() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleChangePassword(userItem)}
+                            disabled={changePasswordMutation.isPending}
+                            data-testid={`button-change-password-${userItem.id}`}
+                          >
+                            <Key className="h-4 w-4 mr-2" />
+                            Trocar Senha
+                          </Button>
                           <div className="flex items-center space-x-2">
                             <span className="text-sm text-gray-600">Administrador</span>
                             <Switch
@@ -1501,6 +1567,86 @@ export default function HomePage() {
                   disabled={updateRoomMutation.isPending}
                 >
                   Atualizar Sala
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-primary" />
+              Trocar Senha do Usuário
+            </DialogTitle>
+            <DialogDescription>
+              {selectedUser && `Alterando a senha para: ${selectedUser.fullName} (${selectedUser.email})`}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...changePasswordForm}>
+            <form onSubmit={changePasswordForm.handleSubmit(onChangePassword)} className="space-y-4">
+              <FormField
+                control={changePasswordForm.control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nova Senha *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder="Digite a nova senha" 
+                        {...field}
+                        data-testid="input-new-password"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={changePasswordForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmar Nova Senha *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder="Digite novamente a nova senha" 
+                        {...field}
+                        data-testid="input-confirm-password"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setChangePasswordOpen(false);
+                    setSelectedUser(null);
+                    changePasswordForm.reset();
+                  }}
+                  data-testid="button-cancel-password"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1"
+                  disabled={changePasswordMutation.isPending}
+                  data-testid="button-confirm-password"
+                >
+                  {changePasswordMutation.isPending ? "Alterando..." : "Alterar Senha"}
                 </Button>
               </div>
             </form>
