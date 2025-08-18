@@ -30,7 +30,6 @@ import {
   Edit,
   Trash2,
   AlertCircle,
-  Info,
   LogOut,
   User as UserIcon,
   Key
@@ -698,7 +697,7 @@ export default function HomePage() {
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-start space-x-3">
-                      <Info className="h-5 w-5 text-blue-500 mt-0.5" />
+                      <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
                       <div>
                         <h4 className="text-sm font-medium text-blue-900 mb-1">Verificação de Disponibilidade</h4>
                         <p className="text-sm text-blue-700">O sistema verificará automaticamente se a sala está disponível.</p>
@@ -955,23 +954,7 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Info card for non-admin users */}
-            {!user.isAdmin && (
-              <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-3">
-                    <Info className="h-5 w-5 text-blue-500 mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium text-blue-900 mb-1">Dashboard Administrativo</h4>
-                      <p className="text-sm text-blue-700">
-                        As estatísticas detalhadas e métricas de uso das salas são visíveis apenas para administradores. 
-                        Para visualizar essas informações, entre em contato com um administrador do sistema.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+
 
             {/* Upcoming Bookings */}
             <Card>
