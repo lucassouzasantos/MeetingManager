@@ -2,9 +2,11 @@
 
 ## Overview
 
-This is a full-stack room booking management system built with React, TypeScript, Express.js, and PostgreSQL. The application provides a comprehensive solution for managing meeting rooms and their bookings within an organization. Users can view available rooms, create bookings, and administrators have additional privileges to manage rooms and users.
+This is a full-stack room booking management system built with React, TypeScript, Express.js, and PostgreSQL/Supabase. The application provides a comprehensive solution for managing meeting rooms and their bookings within an organization. Users can view available rooms, create bookings, and administrators have additional privileges to manage rooms and users.
 
 The system features a modern, responsive interface built with shadcn/ui components and Tailwind CSS, offering both light and dark theme support. The application implements secure authentication with session management and role-based access control.
+
+**Updated**: Sistema migrado para usar Supabase como banco de dados para execução local e deployment independente.
 
 ## User Preferences
 

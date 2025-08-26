@@ -1602,7 +1602,8 @@ export default function HomePage() {
                         placeholder="Digite novamente a nova senha" 
                         {...field}
                         data-testid="input-confirm-password"
-                      />
+                      /> 
+                      
                     </FormControl>
                     <FormMessage />
                   </FormItem>
