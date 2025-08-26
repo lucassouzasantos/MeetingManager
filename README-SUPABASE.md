@@ -23,13 +23,25 @@ Este guia explica como configurar o sistema para usar Supabase como banco de dad
 
 ### 2. Obter URL de Conexão
 
+**IMPORTANTE**: Use a conexão direta, não a pooling, pois o Replit pode ter problemas com connection pooling.
+
 1. No painel do Supabase, vá para **Settings** > **Database**
-2. Na seção "Connection string", copie a URI sob **Connection pooling**
+2. Na seção "Connection string", copie a URI sob **Direct connection** (não use pooling)
 3. Substitua `[YOUR-PASSWORD]` pela senha que você criou
 4. A URL deve ter o formato:
    ```
-   postgresql://postgres.your-project-ref:your-password@aws-0-sa-east-1.pooler.supabase.com:6543/postgres
+   postgresql://postgres:your-password@db.your-project-ref.supabase.co:5432/postgres
    ```
+
+**Exemplo correto**:
+```
+postgresql://postgres:mypassword123@db.abcdefghijk.supabase.co:5432/postgres
+```
+
+**ATENÇÃO**: 
+- Use **Direct connection**, NÃO connection pooling
+- Certifique-se de que a porta seja **5432**
+- O banco deve ser **postgres** no final da URL
 
 ### 3. Configurar Variáveis de Ambiente
 
@@ -127,17 +139,71 @@ O sistema criará automaticamente as seguintes tabelas:
 
 ## Problemas Comuns
 
-### Erro de Conexão com o Banco
-- Verifique se a DATABASE_URL está correta
-- Confirme que a senha está correta na URL
-- Verifique se o projeto Supabase está ativo
+### ❌ Timeout de Conexão (ETIMEDOUT)
+**Problema**: `connect ETIMEDOUT` ou `Connection terminated due to connection timeout`
 
-### Tabelas não existem
-- Execute `npm run db:migrate` para criar as tabelas
+**Soluções**:
+1. **Verifique a URL**: Use **Direct connection**, não connection pooling
+2. **Formato correto**: `postgresql://postgres:password@db.ref.supabase.co:5432/postgres`
+3. **Teste no Supabase**: No painel do Supabase, vá em SQL Editor e execute `SELECT NOW();` para testar se o banco está funcionando
+4. **IP do Replit**: Alguns projetos Supabase limitam conexões por IP. Desabilite isso em Settings > Database > Network Restrictions
 
-### Não consegue fazer login
-- Execute `npm run db:seed` para criar usuários iniciais
-- Verifique se as migrações foram executadas
+### ❌ Erro de Autenticação
+- Confirme que a senha na URL está correta (sem caracteres especiais codificados)
+- Teste fazer login direto no painel do Supabase com a mesma senha
+
+### ❌ Tabelas não existem
+**Solução**: Execute as migrações pelo Supabase SQL Editor:
+
+1. Vá para SQL Editor no painel do Supabase
+2. Cole e execute este SQL:
+
+```sql
+-- Criar tabela de usuários
+CREATE TABLE IF NOT EXISTS users (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    username varchar(255) UNIQUE NOT NULL,
+    full_name varchar(255) NOT NULL,
+    email varchar(255) UNIQUE NOT NULL,
+    position varchar(255),
+    password varchar(255) NOT NULL,
+    is_admin boolean DEFAULT false,
+    created_at timestamp DEFAULT now()
+);
+
+-- Criar tabela de salas
+CREATE TABLE IF NOT EXISTS rooms (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    name varchar(255) NOT NULL,
+    location varchar(255) NOT NULL,
+    capacity integer NOT NULL,
+    is_active boolean DEFAULT true,
+    created_at timestamp DEFAULT now()
+);
+
+-- Criar tabela de agendamentos
+CREATE TABLE IF NOT EXISTS bookings (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    title varchar(255) NOT NULL,
+    description text,
+    date varchar(10) NOT NULL,
+    start_time varchar(5) NOT NULL,
+    end_time varchar(5) NOT NULL,
+    status varchar(20) DEFAULT 'confirmed',
+    user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+    room_id uuid REFERENCES rooms(id) ON DELETE CASCADE,
+    created_at timestamp DEFAULT now()
+);
+```
+
+### ✅ Alternativa: SQLite Local
+Se o Supabase não funcionar, você pode usar SQLite local:
+
+1. Mude a DATABASE_URL para: `file:./database.sqlite`
+2. O sistema detectará automaticamente e usará SQLite
+
+### ❌ Erro de SSL
+Se houver problemas com SSL, adicione `?sslmode=require` no final da URL
 
 ## Suporte
 
