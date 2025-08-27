@@ -105,7 +105,7 @@ export class DatabaseStorage implements IStorage {
   async updateUserAdminStatus(id: string, isAdmin: boolean): Promise<boolean> {
     const [updatedUser] = await db
       .update(users)
-      .set({ isAdmin })
+      .set({ isAdmin: isAdmin ? 1 : 0 })
       .where(eq(users.id, id))
       .returning();
     return !!updatedUser;
@@ -113,7 +113,7 @@ export class DatabaseStorage implements IStorage {
 
   // Room methods
   async getRooms(): Promise<Room[]> {
-    return await db.select().from(rooms).where(eq(rooms.isActive, true)).orderBy(rooms.name);
+    return await db.select().from(rooms).where(eq(rooms.isActive, 1)).orderBy(rooms.name);
   }
 
   async getRoom(id: string): Promise<Room | undefined> {
@@ -141,7 +141,7 @@ export class DatabaseStorage implements IStorage {
   async deleteRoom(id: string): Promise<boolean> {
     const [deletedRoom] = await db
       .update(rooms)
-      .set({ isActive: false })
+      .set({ isActive: 0 })
       .where(eq(rooms.id, id))
       .returning();
     return !!deletedRoom;
@@ -257,7 +257,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(rooms)
       .leftJoin(bookings, eq(rooms.id, bookings.roomId))
-      .where(eq(rooms.isActive, true))
+      .where(eq(rooms.isActive, 1))
       .groupBy(rooms.id, rooms.name, rooms.location)
       .orderBy(desc(count(bookings.id)));
   }
@@ -283,7 +283,7 @@ export class DatabaseStorage implements IStorage {
     const [activeRoomsResult] = await db
       .select({ count: count() })
       .from(rooms)
-      .where(eq(rooms.isActive, true));
+      .where(eq(rooms.isActive, 1));
 
     // Usuários que fizeram pelo menos um agendamento (considerados ativos)
     const [activeUsersResult] = await db
@@ -299,7 +299,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         eq(bookings.date, today),
         eq(bookings.status, "confirmed"),
-        eq(rooms.isActive, true)
+        eq(rooms.isActive, 1)
       ));
 
     const occupancyRate = activeRoomsResult.count > 0 

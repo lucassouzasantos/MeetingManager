@@ -90,12 +90,12 @@ export default function HomePage() {
   // Queries - Admin only
   const { data: dashboardStats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
-    enabled: user?.isAdmin,
+    enabled: Boolean(user?.isAdmin),
   });
 
   const { data: roomStats, isLoading: roomStatsLoading } = useQuery<RoomStats[]>({
     queryKey: ["/api/dashboard/room-stats"],
-    enabled: user?.isAdmin,
+    enabled: Boolean(user?.isAdmin),
   });
 
   const { data: rooms, isLoading: roomsLoading } = useQuery<Room[]>({
@@ -113,7 +113,7 @@ export default function HomePage() {
 
   const { data: allUsers, isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    enabled: user?.isAdmin,
+    enabled: Boolean(user?.isAdmin),
   });
 
   // Mutations
