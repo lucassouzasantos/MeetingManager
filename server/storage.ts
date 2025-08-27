@@ -79,8 +79,9 @@ export class DatabaseStorage implements IStorage {
       const result = await db
         .update(users)
         .set({ password: hashedPassword })
-        .where(eq(users.id, id));
-      return result.rowCount !== null && result.rowCount > 0;
+        .where(eq(users.id, id))
+        .returning();
+      return result.length > 0;
     } catch (error) {
       console.error("Error updating user password:", error);
       return false;
