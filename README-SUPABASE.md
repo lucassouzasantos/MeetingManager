@@ -1,10 +1,19 @@
-# Sistema de Agendamento de Salas - Configuração com Supabase
+# 🐘 Configuração com PostgreSQL/Supabase
 
-Este guia explica como configurar o sistema para usar Supabase como banco de dados e rodá-lo localmente.
+Este guia explica como configurar o sistema para usar PostgreSQL via Supabase em vez do SQLite padrão. Use esta configuração para ambientes de produção ou quando precisar de recursos avançados do PostgreSQL.
+
+## ⚠️ Nota Importante
+
+**O sistema está configurado para usar SQLite por padrão**, que é mais simples e não requer configuração externa. Use PostgreSQL/Supabase apenas se:
+
+- Precisar de recursos avançados do PostgreSQL
+- Estiver em produção
+- Tiver múltiplos usuários simultâneos
+- Quiser compartilhar dados entre instâncias
 
 ## Pré-requisitos
 
-- Node.js 18+ instalado
+- Sistema funcionando com SQLite (configuração padrão)
 - Conta no Supabase (gratuita)
 
 ## Configuração do Supabase
@@ -60,18 +69,23 @@ Após configurar a DATABASE_URL, execute as migrações para criar as tabelas:
 npm run db:migrate
 ```
 
-### 5. Seed do Banco (Dados Iniciais)
+### 5. Configurar o Sistema para PostgreSQL
 
-Execute o seed para criar usuários iniciais:
+Altere a configuração do sistema para usar PostgreSQL em vez de SQLite:
 
 ```bash
-npm run db:seed
+# Edite server/db.ts e altere a linha:
+# const databaseUrl = 'file:./database.sqlite';
+# para:
+# const databaseUrl = process.env.DATABASE_URL || 'file:./database.sqlite';
 ```
 
-Isso criará usuários de exemplo:
-- **Admin**: miriam@pindo.com.py / senha: admin123
-- **Admin**: lucas@pindo.com.py / senha: admin123
-- **Usuário**: joao@pindo.com.py / senha: user123
+### 6. Criar Tabelas Manualmente
+
+Como o sistema está otimizado para SQLite, você precisará criar as tabelas manualmente no Supabase:
+
+1. Vá para **SQL Editor** no painel do Supabase
+2. Execute este script SQL:
 
 ## Rodando Localmente
 
@@ -196,11 +210,12 @@ CREATE TABLE IF NOT EXISTS bookings (
 );
 ```
 
-### ✅ Alternativa: SQLite Local
-Se o Supabase não funcionar, você pode usar SQLite local:
+### ✅ Voltar para SQLite (Recomendado)
+Se houver problemas com Supabase, volte para SQLite:
 
-1. Mude a DATABASE_URL para: `file:./database.sqlite`
-2. O sistema detectará automaticamente e usará SQLite
+1. Remova ou comente a DATABASE_URL nos Secrets do Replit
+2. O sistema voltará automaticamente para SQLite
+3. Execute: `tsx scripts/simple-seed.ts` para recriar os dados
 
 ### ❌ Erro de SSL
 Se houver problemas com SSL, adicione `?sslmode=require` no final da URL
