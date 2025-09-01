@@ -176,12 +176,12 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Senha</FormLabel>
+                            <FormLabel>Contraseña</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Input 
                                   type={showPassword ? "text" : "password"}
-                                  placeholder="Digite sua senha" 
+                                  placeholder="Ingrese su contraseña" 
                                   {...field} 
                                 />
                                 <Button
@@ -205,17 +205,17 @@ export default function AuthPage() {
                         <Dialog open={recoveryOpen} onOpenChange={setRecoveryOpen}>
                           <DialogTrigger asChild>
                             <Button variant="link" className="px-0 text-primary">
-                              Esqueci minha senha
+                              Olvidé mi contraseña
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
                               <DialogTitle className="flex items-center gap-2">
                                 <Key className="h-5 w-5 text-warning" />
-                                Recuperar Senha
+                                Recuperar Contraseña
                               </DialogTitle>
                               <DialogDescription>
-                                Digite seu e-mail para receber as instruções de recuperação
+                                Ingrese su email para recibir las instrucciones de recuperación
                               </DialogDescription>
                             </DialogHeader>
                             <Form {...recoveryForm}>
@@ -225,11 +225,11 @@ export default function AuthPage() {
                                   name="email"
                                   render={({ field }) => (
                                     <FormItem>
-                                      <FormLabel>E-mail</FormLabel>
+                                      <FormLabel>Email</FormLabel>
                                       <FormControl>
                                         <Input 
                                           type="email"
-                                          placeholder="Digite seu e-mail" 
+                                          placeholder="Ingrese su email" 
                                           {...field} 
                                         />
                                       </FormControl>
@@ -267,7 +267,7 @@ export default function AuthPage() {
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Entrar
+                        Ingresar
                       </Button>
                     </form>
                   </Form>
@@ -275,9 +275,9 @@ export default function AuthPage() {
 
                 <TabsContent value="register" className="p-6">
                   <CardHeader className="p-0 mb-6">
-                    <CardTitle>Criar Conta</CardTitle>
+                    <CardTitle>Crear Cuenta</CardTitle>
                     <CardDescription>
-                      Preencha os dados para se cadastrar no sistema
+                      Complete los datos para registrarse en el sistema
                     </CardDescription>
                   </CardHeader>
 
@@ -288,10 +288,10 @@ export default function AuthPage() {
                         name="fullName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nome Completo *</FormLabel>
+                            <FormLabel>Nombre Completo *</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="Digite seu nome completo" 
+                                placeholder="Ingrese su nombre completo" 
                                 {...field} 
                               />
                             </FormControl>
@@ -305,10 +305,10 @@ export default function AuthPage() {
                         name="position"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Função (Cargo) *</FormLabel>
+                            <FormLabel>Función (Cargo) *</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="Ex: Gerente de Vendas" 
+                                placeholder="Ej: Gerente de Ventas" 
                                 {...field} 
                               />
                             </FormControl>
@@ -322,11 +322,11 @@ export default function AuthPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>E-mail *</FormLabel>
+                            <FormLabel>Email *</FormLabel>
                             <FormControl>
                               <Input 
                                 type="email"
-                                placeholder="Digite seu e-mail" 
+                                placeholder="Ingrese su email" 
                                 {...field} 
                               />
                             </FormControl>
@@ -340,10 +340,10 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nome de Usuário *</FormLabel>
+                            <FormLabel>Nombre de Usuario *</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="Digite um nome de usuário" 
+                                placeholder="Ingrese un nombre de usuario" 
                                 {...field} 
                               />
                             </FormControl>
@@ -357,12 +357,12 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Senha *</FormLabel>
+                            <FormLabel>Contraseña *</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Input 
                                   type={showPassword ? "text" : "password"}
-                                  placeholder="Digite uma senha forte" 
+                                  placeholder="Ingrese una contraseña fuerte" 
                                   {...field} 
                                 />
                                 <Button
@@ -378,7 +378,7 @@ export default function AuthPage() {
                             </FormControl>
                             <FormMessage />
                             <p className="text-xs text-muted-foreground">
-                              Mínimo 8 caracteres com letras e números
+                              Mínimo 8 caracteres con letras y números
                             </p>
                           </FormItem>
                         )}
@@ -389,12 +389,12 @@ export default function AuthPage() {
                         name="confirmPassword"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Confirmar Senha *</FormLabel>
+                            <FormLabel>Confirmar Contraseña *</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Input 
                                   type={showConfirmPassword ? "text" : "password"}
-                                  placeholder="Digite a senha novamente" 
+                                  placeholder="Ingrese la contraseña nuevamente" 
                                   {...field} 
                                 />
                                 <Button
@@ -419,7 +419,7 @@ export default function AuthPage() {
                         disabled={registerMutation.isPending}
                       >
                         {registerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Criar Conta
+                        Crear Cuenta
                       </Button>
                     </form>
                   </Form>

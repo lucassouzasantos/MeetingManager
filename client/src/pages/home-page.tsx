@@ -49,10 +49,10 @@ const editRoomFormSchema = insertRoomSchema.pick({
 });
 
 const changePasswordSchema = z.object({
-  newPassword: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  newPassword: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Senhas não coincidem",
+  message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
 });
 
@@ -102,7 +102,7 @@ export default function HomePage() {
     queryKey: ["/api/rooms"],
   });
 
-  // Get all bookings for dashboard, user bookings for "Meus Agendamentos"
+  // Get all bookings for dashboard, user bookings for "Mis Reservas"
   const { data: allBookings, isLoading: allBookingsLoading } = useQuery<BookingWithDetails[]>({
     queryKey: ["/api/bookings/all"],
   });
@@ -153,8 +153,8 @@ export default function HomePage() {
       
       setNewBookingOpen(false);
       toast({
-        title: "Agendamento criado",
-        description: "Sua reserva foi criada com sucesso!",
+        title: "Reserva creada",
+        description: "¡Su reserva fue creada con éxito!",
       });
     },
     onError: (error: Error) => {
@@ -206,8 +206,8 @@ export default function HomePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/all"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
-        title: "Agendamento cancelado",
-        description: "Reserva foi cancelada com sucesso!",
+        title: "Reserva cancelada",
+        description: "¡La reserva fue cancelada con éxito!",
       });
     },
     onError: (error: Error) => {
@@ -1023,7 +1023,7 @@ export default function HomePage() {
                                     <p className="text-xs text-gray-500">{booking.description}</p>
                                   )}
                                   {booking.responsavel && (
-                                    <p className="text-xs text-blue-600">Responsável: {booking.responsavel}</p>
+                                    <p className="text-xs text-blue-600">Responsable: {booking.responsavel}</p>
                                   )}
                                 </div>
                               </div>
@@ -1115,7 +1115,7 @@ export default function HomePage() {
                             )}
                             {booking.responsavel && (
                               <p className="text-gray-600 mb-3">
-                                <span className="font-medium">Responsável:</span> {booking.responsavel}
+                                <span className="font-medium">Responsable:</span> {booking.responsavel}
                               </p>
                             )}
                             
@@ -1187,7 +1187,7 @@ export default function HomePage() {
                             )}
                             {booking.responsavel && (
                               <p className="text-gray-600 mb-3">
-                                <span className="font-medium">Responsável:</span> {booking.responsavel}
+                                <span className="font-medium">Responsable:</span> {booking.responsavel}
                               </p>
                             )}
                             
@@ -1237,8 +1237,8 @@ export default function HomePage() {
             <div className="mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Gerenciar Usuários</h1>
-                  <p className="text-gray-600">Controle as permissões de administrador dos usuários</p>
+                  <h1 className="text-2xl font-bold text-gray-900">Gestionar Usuarios</h1>
+                  <p className="text-gray-600">Controle los permisos de administrador de los usuarios</p>
                 </div>
               </div>
             </div>
@@ -1254,7 +1254,7 @@ export default function HomePage() {
                 <Card>
                   <CardContent className="text-center py-8">
                     <UserIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Nenhum usuário encontrado</p>
+                    <p className="text-gray-500">Ningún usuario encontrado</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -1281,7 +1281,7 @@ export default function HomePage() {
                             data-testid={`button-change-password-${userItem.id}`}
                           >
                             <Key className="h-4 w-4 mr-2" />
-                            Trocar Senha
+                            Cambiar Contraseña
                           </Button>
                           <div className="flex items-center space-x-2">
                             <span className="text-sm text-gray-600">Administrador</span>
@@ -1314,21 +1314,21 @@ export default function HomePage() {
             <div className="mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Gerenciar Salas</h1>
-                  <p className="text-gray-600">Cadastre e gerencie as salas de reunião</p>
+                  <h1 className="text-2xl font-bold text-gray-900">Gestionar Salas</h1>
+                  <p className="text-gray-600">Registre y gestione las salas de reunión</p>
                 </div>
                 <Dialog open={newRoomOpen} onOpenChange={setNewRoomOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="mr-2 h-4 w-4" />
-                      Nova Sala
+                      Nueva Sala
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2">
                         <DoorOpen className="h-5 w-5 text-primary" />
-                        Nova Sala
+                        Nueva Sala
                       </DialogTitle>
                       <DialogDescription>
                         Cadastre uma nova sala de reunião
@@ -1341,9 +1341,9 @@ export default function HomePage() {
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Nome da Sala *</FormLabel>
+                              <FormLabel>Nombre de la Sala *</FormLabel>
                               <FormControl>
-                                <Input placeholder="Ex: Sala Executive Premium" {...field} />
+                                <Input placeholder="Ej: Sala Ejecutiva Premium" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1355,9 +1355,9 @@ export default function HomePage() {
                           name="location"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Localização *</FormLabel>
+                              <FormLabel>Ubicación *</FormLabel>
                               <FormControl>
-                                <Input placeholder="Ex: 3º Andar - Ala Oeste" {...field} />
+                                <Input placeholder="Ej: 3er Piso - Ala Oeste" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1369,7 +1369,7 @@ export default function HomePage() {
                           name="capacity"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Capacidade Máxima *</FormLabel>
+                              <FormLabel>Capacidad Máxima *</FormLabel>
                               <FormControl>
                                 <Input 
                                   type="number" 
@@ -1488,7 +1488,7 @@ export default function HomePage() {
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-500">Status</span>
                             <Badge variant={room.isActive ? "default" : "secondary"}>
-                              {room.isActive ? "Ativa" : "Inativa"}
+                              {room.isActive ? "Activa" : "Inactiva"}
                             </Badge>
                           </div>
                         </div>
@@ -1511,7 +1511,7 @@ export default function HomePage() {
               Editar Sala
             </DialogTitle>
             <DialogDescription>
-              Atualize as informações da sala
+              Actualice la información de la sala
             </DialogDescription>
           </DialogHeader>
           <Form {...editRoomForm}>
@@ -1521,9 +1521,9 @@ export default function HomePage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome da Sala *</FormLabel>
+                    <FormLabel>Nombre de la Sala *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Sala Executive Premium" {...field} />
+                      <Input placeholder="Ej: Sala Ejecutiva Premium" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1535,9 +1535,9 @@ export default function HomePage() {
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Localização *</FormLabel>
+                    <FormLabel>Ubicación *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: 3º Andar - Ala Oeste" {...field} />
+                      <Input placeholder="Ej: 3er Piso - Ala Oeste" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1549,7 +1549,7 @@ export default function HomePage() {
                 name="capacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Capacidade Máxima *</FormLabel>
+                    <FormLabel>Capacidad Máxima *</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -1582,7 +1582,7 @@ export default function HomePage() {
                   className="flex-1"
                   disabled={updateRoomMutation.isPending}
                 >
-                  Atualizar Sala
+                  Actualizar Sala
                 </Button>
               </div>
             </form>
@@ -1596,10 +1596,10 @@ export default function HomePage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Key className="h-5 w-5 text-primary" />
-              Trocar Senha do Usuário
+              Cambiar Contraseña del Usuario
             </DialogTitle>
             <DialogDescription>
-              {selectedUser && `Alterando a senha para: ${selectedUser.fullName} (${selectedUser.email})`}
+              {selectedUser && `Cambiando la contraseña para: ${selectedUser.fullName} (${selectedUser.email})`}
             </DialogDescription>
           </DialogHeader>
           <Form {...changePasswordForm}>
@@ -1609,11 +1609,11 @@ export default function HomePage() {
                 name="newPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nova Senha *</FormLabel>
+                    <FormLabel>Nueva Contraseña *</FormLabel>
                     <FormControl>
                       <Input 
                         type="password" 
-                        placeholder="Digite a nova senha" 
+                        placeholder="Ingrese la nueva contraseña" 
                         {...field}
                         data-testid="input-new-password"
                       />
@@ -1628,11 +1628,11 @@ export default function HomePage() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirmar Nova Senha *</FormLabel>
+                    <FormLabel>Confirmar Nueva Contraseña *</FormLabel>
                     <FormControl>
                       <Input 
                         type="password" 
-                        placeholder="Digite novamente a nova senha" 
+                        placeholder="Ingrese nuevamente la nueva contraseña" 
                         {...field}
                         data-testid="input-confirm-password"
                       /> 
@@ -1663,7 +1663,7 @@ export default function HomePage() {
                   disabled={changePasswordMutation.isPending}
                   data-testid="button-confirm-password"
                 >
-                  {changePasswordMutation.isPending ? "Alterando..." : "Alterar Senha"}
+                  {changePasswordMutation.isPending ? "Cambiando..." : "Cambiar Contraseña"}
                 </Button>
               </div>
             </form>

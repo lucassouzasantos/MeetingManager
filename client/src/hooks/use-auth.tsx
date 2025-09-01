@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error) => {
       toast({
-        title: "Login failed",
+        title: "Error de inicio de sesión",
         description: error.message,
         variant: "destructive",
       });
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error) => {
       toast({
-        title: "Registration failed",
+        title: "Error en el registro",
         description: error.message,
         variant: "destructive",
       });
