@@ -235,27 +235,64 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkBookingConflict(roomId: string, date: string, startTime: string, endTime: string, excludeBookingId?: string): Promise<boolean> {
-    const conditions = [
-      eq(bookings.roomId, roomId),
-      eq(bookings.date, date),
-      eq(bookings.status, "confirmed"),
-      sql`(
-        (${startTime} >= start_time AND ${startTime} < end_time) OR
-        (${endTime} > start_time AND ${endTime} <= end_time) OR
-        (${startTime} <= start_time AND ${endTime} >= end_time)
-      )`
-    ];
-
-    if (excludeBookingId) {
-      conditions.push(ne(bookings.id, excludeBookingId));
-    }
-
-    const conflicts = await db
+    // Buscar todos os agendamentos confirmados para a mesma sala e data
+    let query = db
       .select()
       .from(bookings)
-      .where(and(...conditions));
+      .where(and(
+        eq(bookings.roomId, roomId),
+        eq(bookings.date, date),
+        eq(bookings.status, "confirmed")
+      ));
+
+    // Se há um ID para excluir (edição), adicionar a condição
+    if (excludeBookingId) {
+      query = query.where(ne(bookings.id, excludeBookingId));
+    }
+
+    const existingBookings = await query;
+    
+    console.log(`🔍 Verificando conflitos para sala ${roomId} em ${date} de ${startTime} às ${endTime}`);
+    console.log(`   Agendamentos existentes: ${existingBookings.length}`);
+    
+    // Verificar conflito manualmente para cada agendamento existente
+    for (const existing of existingBookings) {
+      const hasConflict = this.timeRangesOverlap(
+        startTime, endTime,
+        existing.startTime, existing.endTime
+      );
       
-    return conflicts.length > 0;
+      if (hasConflict) {
+        console.log(`   ❌ CONFLITO encontrado com: "${existing.title}" (${existing.startTime}-${existing.endTime})`);
+        return true;
+      }
+    }
+    
+    console.log(`   ✅ Sem conflitos encontrados`);
+    return false;
+  }
+
+  // Função auxiliar para verificar se dois períodos de tempo se sobrepõem
+  private timeRangesOverlap(start1: string, end1: string, start2: string, end2: string): boolean {
+    // Converte strings de tempo para minutos desde meia-noite para comparação mais fácil
+    const timeToMinutes = (time: string): number => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+    
+    const start1Min = timeToMinutes(start1);
+    const end1Min = timeToMinutes(end1);
+    const start2Min = timeToMinutes(start2);
+    const end2Min = timeToMinutes(end2);
+    
+    // Verifica se há sobreposição:
+    // Novo agendamento começa antes do existente terminar E
+    // Novo agendamento termina depois do existente começar
+    const overlaps = start1Min < end2Min && end1Min > start2Min;
+    
+    console.log(`     Comparando ${start1}-${end1} (${start1Min}-${end1Min}) com ${start2}-${end2} (${start2Min}-${end2Min}): ${overlaps ? 'CONFLITO' : 'OK'}`);
+    
+    return overlaps;
   }
 
   async getRoomStats(): Promise<{ roomId: string; roomName: string; bookingCount: number; location: string }[]> {
