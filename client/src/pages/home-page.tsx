@@ -36,9 +36,9 @@ import {
 } from "lucide-react";
 
 const bookingFormSchema = insertBookingSchema.extend({
-  date: z.string().min(1, "Data é obrigatória"),
-  startTime: z.string().min(1, "Horário de início é obrigatório"),
-  endTime: z.string().min(1, "Horário de término é obrigatório"),
+  date: z.string().min(1, "La fecha es obligatoria"),
+  startTime: z.string().min(1, "La hora de inicio es obligatoria"),
+  endTime: z.string().min(1, "La hora de fin es obligatoria"),
 });
 
 const roomFormSchema = insertRoomSchema;
@@ -127,7 +127,7 @@ export default function HomePage() {
         if (error.message.includes('409:')) {
           throw new Error('Esta sala já está reservada para este horário. Por favor, escolha outro horário ou sala.');
         } else if (error.message.includes('400:')) {
-          throw new Error('Dados do agendamento inválidos. Verifique se o horário de término é posterior ao de início.');
+          throw new Error('Datos de la reserva inválidos. Verifique que la hora de fin sea posterior a la de inicio.');
         }
         throw error;
       }
@@ -159,7 +159,7 @@ export default function HomePage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao criar agendamento",
+        title: "Error al crear reserva",
         description: error.message,
         variant: "destructive",
       });
@@ -212,7 +212,7 @@ export default function HomePage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao cancelar agendamento",
+        title: "Error al cancelar reserva",
         description: error.message,
         variant: "destructive",
       });
@@ -979,10 +979,10 @@ export default function HomePage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Agendamientos</CardTitle>
+                  <CardTitle>Reservas</CardTitle>
                   <Button onClick={() => setNewBookingOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Nuevo Agendamiento
+                    Nueva Reserva
                   </Button>
                 </div>
               </CardHeader>
@@ -1004,7 +1004,7 @@ export default function HomePage() {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Título</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha/Hora</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sala</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Responsable</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -1095,10 +1095,10 @@ export default function HomePage() {
                   <Card>
                     <CardContent className="text-center py-8">
                       <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">Nenhum agendamento encontrado</p>
+                      <p className="text-gray-500">Ninguna reserva encontrada</p>
                       <Button onClick={() => setNewBookingOpen(true)} className="mt-4">
                         <Plus className="mr-2 h-4 w-4" />
-                        Criar Agendamento
+                        Crear Reserva
                       </Button>
                     </CardContent>
                   </Card>
@@ -1167,10 +1167,10 @@ export default function HomePage() {
                   <Card>
                     <CardContent className="text-center py-8">
                       <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">Nenhum agendamento encontrado</p>
+                      <p className="text-gray-500">Ninguna reserva encontrada</p>
                       <Button onClick={() => setNewBookingOpen(true)} className="mt-4">
                         <Plus className="mr-2 h-4 w-4" />
-                        Criar Agendamento
+                        Crear Reserva
                       </Button>
                     </CardContent>
                   </Card>
@@ -1374,7 +1374,7 @@ export default function HomePage() {
                                   type="number" 
                                   min="1" 
                                   max="500"
-                                  placeholder="Ex: 15" 
+                                  placeholder="Ej: 15" 
                                   {...field}
                                   onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                                 />
@@ -1468,7 +1468,7 @@ export default function HomePage() {
 
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Taxa de ocupação</span>
+                            <span className="text-sm text-gray-600">Tasa de ocupación</span>
                             <span className="text-sm font-medium text-gray-900">{occupancyRate}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
@@ -1553,7 +1553,7 @@ export default function HomePage() {
                         type="number" 
                         min="1" 
                         max="500"
-                        placeholder="Ex: 20"
+                        placeholder="Ej: 20"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                       />
