@@ -1,39 +1,39 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   fullName: text("full_name").notNull(),
   position: text("position").notNull(),
   email: text("email").notNull().unique(),
-  isAdmin: boolean("is_admin").notNull().default(false),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  isAdmin: integer("is_admin", { mode: 'boolean' }).notNull().default(false),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
-export const rooms = pgTable("rooms", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const rooms = sqliteTable("rooms", {
+  id: text("id").primaryKey(),
   name: text("name").notNull(),
   location: text("location").notNull(),
   capacity: integer("capacity").notNull(),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  isActive: integer("is_active", { mode: 'boolean' }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
-export const bookings = pgTable("bookings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const bookings = sqliteTable("bookings", {
+  id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   date: text("date").notNull(), // Format: YYYY-MM-DD
   startTime: text("start_time").notNull(), // Format: HH:MM
   endTime: text("end_time").notNull(), // Format: HH:MM
-  userId: varchar("user_id").notNull().references(() => users.id),
-  roomId: varchar("room_id").notNull().references(() => rooms.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  roomId: text("room_id").notNull().references(() => rooms.id),
   status: text("status").notNull().default("confirmed"), // confirmed, pending, cancelled
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // Relations

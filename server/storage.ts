@@ -3,6 +3,7 @@ import { db } from "./db";
 import { eq, ne, and, desc, count, sql } from "drizzle-orm";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import { nanoid } from "nanoid";
 
 // Use MemoryStore for sessions with SQLite
 const MemorySessionStore = MemoryStore(session);
@@ -69,7 +70,10 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values({
+        ...insertUser,
+        id: nanoid()
+      })
       .returning();
     return user;
   }
@@ -106,7 +110,7 @@ export class DatabaseStorage implements IStorage {
   async updateUserAdminStatus(id: string, isAdmin: boolean): Promise<boolean> {
     const [updatedUser] = await db
       .update(users)
-      .set({ isAdmin: isAdmin ? 1 : 0 })
+      .set({ isAdmin: isAdmin })
       .where(eq(users.id, id))
       .returning();
     return !!updatedUser;
@@ -114,7 +118,7 @@ export class DatabaseStorage implements IStorage {
 
   // Room methods
   async getRooms(): Promise<Room[]> {
-    return await db.select().from(rooms).where(eq(rooms.isActive, 1)).orderBy(rooms.name);
+    return await db.select().from(rooms).where(eq(rooms.isActive, true)).orderBy(rooms.name);
   }
 
   async getRoom(id: string): Promise<Room | undefined> {
@@ -125,7 +129,10 @@ export class DatabaseStorage implements IStorage {
   async createRoom(room: InsertRoom): Promise<Room> {
     const [newRoom] = await db
       .insert(rooms)
-      .values(room)
+      .values({
+        ...room,
+        id: nanoid()
+      })
       .returning();
     return newRoom;
   }
@@ -142,7 +149,7 @@ export class DatabaseStorage implements IStorage {
   async deleteRoom(id: string): Promise<boolean> {
     const [deletedRoom] = await db
       .update(rooms)
-      .set({ isActive: 0 })
+      .set({ isActive: false })
       .where(eq(rooms.id, id))
       .returning();
     return !!deletedRoom;
@@ -202,7 +209,10 @@ export class DatabaseStorage implements IStorage {
   async createBooking(booking: InsertBooking & { userId: string }): Promise<Booking> {
     const [newBooking] = await db
       .insert(bookings)
-      .values(booking)
+      .values({
+        ...booking,
+        id: nanoid()
+      })
       .returning();
     return newBooking;
   }
@@ -258,7 +268,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(rooms)
       .leftJoin(bookings, eq(rooms.id, bookings.roomId))
-      .where(eq(rooms.isActive, 1))
+      .where(eq(rooms.isActive, true))
       .groupBy(rooms.id, rooms.name, rooms.location)
       .orderBy(desc(count(bookings.id)));
   }
@@ -284,7 +294,7 @@ export class DatabaseStorage implements IStorage {
     const [activeRoomsResult] = await db
       .select({ count: count() })
       .from(rooms)
-      .where(eq(rooms.isActive, 1));
+      .where(eq(rooms.isActive, true));
 
     // Usuários que fizeram pelo menos um agendamento (considerados ativos)
     const [activeUsersResult] = await db
@@ -300,7 +310,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         eq(bookings.date, today),
         eq(bookings.status, "confirmed"),
-        eq(rooms.isActive, 1)
+        eq(rooms.isActive, true)
       ));
 
     const occupancyRate = activeRoomsResult.count > 0 
