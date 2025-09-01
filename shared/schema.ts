@@ -27,6 +27,7 @@ export const bookings = sqliteTable("bookings", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
+  responsavel: text("responsavel"), // Campo opcional para responsável pela reunião
   date: text("date").notNull(), // Format: YYYY-MM-DD
   startTime: text("start_time").notNull(), // Format: HH:MM
   endTime: text("end_time").notNull(), // Format: HH:MM
@@ -74,6 +75,7 @@ export const insertRoomSchema = createInsertSchema(rooms).pick({
 export const insertBookingSchema = createInsertSchema(bookings).pick({
   title: true,
   description: true,
+  responsavel: true,
   date: true,
   startTime: true,
   endTime: true,
@@ -107,6 +109,7 @@ export const bookingFormSchema = insertBookingSchema.extend({
   endTime: z.string().min(1, "Horário de término é obrigatório"),
   title: z.string().min(1, "Título é obrigatório").max(100, "Título muito longo"),
   roomId: z.string().min(1, "Sala é obrigatória"),
+  responsavel: z.string().optional(), // Campo opcional
 });
 
 export type RoomForm = z.infer<typeof roomFormSchema>;

@@ -144,6 +144,7 @@ export default function HomePage() {
       bookingForm.reset({
         title: "",
         description: "",
+        responsavel: "",
         date: "",
         startTime: "",
         endTime: "",
@@ -311,6 +312,7 @@ export default function HomePage() {
     defaultValues: {
       title: "",
       description: "",
+      responsavel: "",
       date: "",
       startTime: "",
       endTime: "",
@@ -678,6 +680,24 @@ export default function HomePage() {
 
                   <FormField
                     control={bookingForm.control}
+                    name="responsavel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Responsável pela Reunião</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Ex: João Silva ou deixe vazio se você for o responsável"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={bookingForm.control}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
@@ -1002,6 +1022,9 @@ export default function HomePage() {
                                   {booking.description && (
                                     <p className="text-xs text-gray-500">{booking.description}</p>
                                   )}
+                                  {booking.responsavel && (
+                                    <p className="text-xs text-blue-600">Responsável: {booking.responsavel}</p>
+                                  )}
                                 </div>
                               </div>
                             </td>
@@ -1090,6 +1113,11 @@ export default function HomePage() {
                             {booking.description && (
                               <p className="text-gray-600 mb-3">{booking.description}</p>
                             )}
+                            {booking.responsavel && (
+                              <p className="text-gray-600 mb-3">
+                                <span className="font-medium">Responsável:</span> {booking.responsavel}
+                              </p>
+                            )}
                             
                             <div className="flex items-center space-x-6 text-sm text-gray-500">
                               <div className="flex items-center space-x-2">
@@ -1156,6 +1184,11 @@ export default function HomePage() {
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">{booking.title}</h3>
                             {booking.description && (
                               <p className="text-gray-600 mb-3">{booking.description}</p>
+                            )}
+                            {booking.responsavel && (
+                              <p className="text-gray-600 mb-3">
+                                <span className="font-medium">Responsável:</span> {booking.responsavel}
+                              </p>
                             )}
                             
                             <div className="flex items-center space-x-6 text-sm text-gray-500">
