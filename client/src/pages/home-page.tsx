@@ -798,7 +798,6 @@ export default function HomePage() {
           </Button>
         </div>
       </div>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {activeScreen === "dashboard" && (
@@ -980,7 +979,7 @@ export default function HomePage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Próximos Agendamentos</CardTitle>
+                  <CardTitle>Agendamientos</CardTitle>
                   <Button onClick={() => setNewBookingOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Novo Agendamento
@@ -1501,7 +1500,6 @@ export default function HomePage() {
           </div>
         )}
       </div>
-
       {/* Edit Room Dialog */}
       <Dialog open={editRoomOpen} onOpenChange={setEditRoomOpen}>
         <DialogContent>
@@ -1589,7 +1587,6 @@ export default function HomePage() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Change Password Dialog */}
       <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
         <DialogContent>
