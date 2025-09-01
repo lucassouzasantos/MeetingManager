@@ -982,7 +982,7 @@ export default function HomePage() {
                   <CardTitle>Agendamientos</CardTitle>
                   <Button onClick={() => setNewBookingOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Novo Agendamento
+                    Nuevo Agendamiento
                   </Button>
                 </div>
               </CardHeader>
@@ -996,7 +996,7 @@ export default function HomePage() {
                 ) : dashboardBookings.length === 0 ? (
                   <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Nenhum agendamento futuro encontrado</p>
+                    <p className="text-gray-500">Ninguna reserva futura encontrada</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -1006,7 +1006,7 @@ export default function HomePage() {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Título</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sala</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Responsável</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Responsable</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                         </tr>
                       </thead>
@@ -1330,7 +1330,7 @@ export default function HomePage() {
                         Nueva Sala
                       </DialogTitle>
                       <DialogDescription>
-                        Cadastre uma nova sala de reunião
+                        Registre una nueva sala de reunión
                       </DialogDescription>
                     </DialogHeader>
                     <Form {...roomForm}>
@@ -1398,7 +1398,7 @@ export default function HomePage() {
                             className="flex-1"
                             disabled={createRoomMutation.isPending}
                           >
-                            Criar Sala
+                            Crear Sala
                           </Button>
                         </div>
                       </form>
@@ -1417,10 +1417,10 @@ export default function HomePage() {
                 <Card className="col-span-full">
                   <CardContent className="text-center py-8">
                     <DoorOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Nenhuma sala cadastrada</p>
+                    <p className="text-gray-500">Ninguna sala registrada</p>
                     <Button onClick={() => setNewRoomOpen(true)} className="mt-4">
                       <Plus className="mr-2 h-4 w-4" />
-                      Criar Primeira Sala
+                      Crear Primera Sala
                     </Button>
                   </CardContent>
                 </Card>
@@ -1439,11 +1439,11 @@ export default function HomePage() {
                             <div className="flex items-center space-x-4 text-sm text-gray-600">
                               <div className="flex items-center space-x-1">
                                 <Users className="h-4 w-4" />
-                                <span>{room.capacity} pessoas</span>
+                                <span>{room.capacity} personas</span>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <Calendar className="h-4 w-4" />
-                                <span>{roomBookings} agendamentos</span>
+                                <span>{roomBookings} reservas</span>
                               </div>
                             </div>
                           </div>
