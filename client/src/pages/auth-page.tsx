@@ -17,19 +17,19 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Calendar, Eye, EyeOff, Key, Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "E-mail ou usuário é obrigatório"),
-  password: z.string().min(1, "Senha é obrigatória"),
+  username: z.string().min(1, "Email o usuario es obligatorio"),
+  password: z.string().min(1, "La contraseña es obligatoria"),
 });
 
 const registerSchema = insertUserSchema.extend({
-  confirmPassword: z.string().min(1, "Confirme sua senha"),
+  confirmPassword: z.string().min(1, "Confirme su contraseña"),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não coincidem",
+  message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
 });
 
 const recoverySchema = z.object({
-  email: z.string().email("E-mail inválido"),
+  email: z.string().email("Email inválido"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -104,7 +104,7 @@ export default function AuthPage() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Recuperação enviada",
+        title: "Recuperación enviada",
         description: data.message,
       });
       setRecoveryOpen(false);
@@ -112,7 +112,7 @@ export default function AuthPage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro na recuperação",
+        title: "Error en la recuperación",
         description: error.message,
         variant: "destructive",
       });
@@ -132,23 +132,23 @@ export default function AuthPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
               <Calendar className="text-white h-8 w-8" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Sistema de Agendamento</h1>
-            <p className="text-gray-600">Gerencie suas reservas de salas</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Sistema de Reservas</h1>
+            <p className="text-gray-600">Gestione sus reservas de salas</p>
           </div>
 
           <Card>
             <CardContent className="p-0">
               <Tabs defaultValue="login" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="login">Entrar</TabsTrigger>
-                  <TabsTrigger value="register">Cadastrar</TabsTrigger>
+                  <TabsTrigger value="login">Ingresar</TabsTrigger>
+                  <TabsTrigger value="register">Registrarse</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="login" className="p-6">
                   <CardHeader className="p-0 mb-6">
-                    <CardTitle>Fazer Login</CardTitle>
+                    <CardTitle>Iniciar Sesión</CardTitle>
                     <CardDescription>
-                      Entre com suas credenciais para acessar o sistema
+                      Ingrese sus credenciales para acceder al sistema
                     </CardDescription>
                   </CardHeader>
 
@@ -159,10 +159,10 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>E-mail ou Usuário</FormLabel>
+                            <FormLabel>Email o Usuario</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="Digite seu e-mail ou usuário" 
+                                placeholder="Ingrese su email o usuario" 
                                 {...field} 
                               />
                             </FormControl>

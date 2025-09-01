@@ -527,7 +527,7 @@ export default function HomePage() {
               <Calendar className="text-white h-5 w-5" />
             </div>
             <div>
-              <h2 className="font-bold text-gray-900">Agendamento</h2>
+              <h2 className="font-bold text-gray-900">Reservas</h2>
               <p className="text-xs text-gray-500">Sistema de Salas</p>
             </div>
           </div>
@@ -540,21 +540,21 @@ export default function HomePage() {
             onClick={() => setActiveScreen("dashboard")}
           >
             <ChartPie className="mr-3 h-4 w-4" />
-            Dashboard
+            Tablero
           </Button>
 
           <Dialog open={newBookingOpen} onOpenChange={setNewBookingOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" className="w-full justify-start">
                 <Plus className="mr-3 h-4 w-4" />
-                Novo Agendamento
+                Nueva Reserva
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Novo Agendamento</DialogTitle>
+                <DialogTitle>Nueva Reserva</DialogTitle>
                 <DialogDescription>
-                  Preencha os dados para reservar uma sala
+                  Complete los datos para reservar una sala
                 </DialogDescription>
               </DialogHeader>
               <Form {...bookingForm}>
@@ -564,9 +564,9 @@ export default function HomePage() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Título da Reunião *</FormLabel>
+                        <FormLabel>Título de la Reunión *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ex: Reunião de Planejamento Mensal" {...field} />
+                          <Input placeholder="Ej: Reunión de Planificación Mensual" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -579,7 +579,7 @@ export default function HomePage() {
                       name="date"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Data *</FormLabel>
+                          <FormLabel>Fecha *</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -597,13 +597,13 @@ export default function HomePage() {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Selecione uma sala" />
+                                <SelectValue placeholder="Seleccione una sala" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {rooms?.map((room) => (
                                 <SelectItem key={room.id} value={room.id}>
-                                  {room.name} ({room.capacity} pessoas)
+                                  {room.name} ({room.capacity} personas)
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -620,17 +620,17 @@ export default function HomePage() {
                       name="startTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Horário de Início *</FormLabel>
+                          <FormLabel>Hora de Inicio *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Selecione o horário" />
+                                <SelectValue placeholder="Seleccione la hora" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {availableStartTimes.length === 0 ? (
                                 <SelectItem value="none" disabled>
-                                  {watchedDate && watchedRoomId ? "Nenhum horário disponível" : "Selecione primeiro a data e sala"}
+                                  {watchedDate && watchedRoomId ? "Ninguna hora disponible" : "Seleccione primero la fecha y sala"}
                                 </SelectItem>
                               ) : (
                                 availableStartTimes.map((time) => (
@@ -651,17 +651,17 @@ export default function HomePage() {
                       name="endTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Horário de Término *</FormLabel>
+                          <FormLabel>Hora de Fin *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Selecione o horário" />
+                                <SelectValue placeholder="Seleccione la hora" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {availableEndTimes.length === 0 ? (
                                 <SelectItem value="none" disabled>
-                                  {watchedStartTime ? "Nenhum horário disponível" : "Selecione primeiro o horário de início"}
+                                  {watchedStartTime ? "Ninguna hora disponible" : "Seleccione primero la hora de inicio"}
                                 </SelectItem>
                               ) : (
                                 availableEndTimes.map((time) => (
@@ -683,10 +683,10 @@ export default function HomePage() {
                     name="responsavel"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Responsável pela Reunião</FormLabel>
+                        <FormLabel>Responsable de la Reunión</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Ex: João Silva ou deixe vazio se você for o responsável"
+                            placeholder="Ej: Juan Silva o deje vacío si usted es el responsable"
                             {...field}
                             value={field.value || ""}
                           />
@@ -701,10 +701,10 @@ export default function HomePage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Descrição</FormLabel>
+                        <FormLabel>Descripción</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Descreva o objetivo da reunião..."
+                            placeholder="Describa el objetivo de la reunión..."
                             className="resize-none"
                             {...field}
                             value={field.value || ""}
@@ -719,8 +719,8 @@ export default function HomePage() {
                     <div className="flex items-start space-x-3">
                       <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
                       <div>
-                        <h4 className="text-sm font-medium text-blue-900 mb-1">Verificação de Disponibilidade</h4>
-                        <p className="text-sm text-blue-700">O sistema verificará automaticamente se a sala está disponível.</p>
+                        <h4 className="text-sm font-medium text-blue-900 mb-1">Verificación de Disponibilidad</h4>
+                        <p className="text-sm text-blue-700">El sistema verificará automáticamente si la sala está disponible.</p>
                       </div>
                     </div>
                   </div>
@@ -739,7 +739,7 @@ export default function HomePage() {
                       className="flex-1"
                       disabled={createBookingMutation.isPending}
                     >
-                      Criar Agendamento
+                      Crear Reserva
                     </Button>
                   </div>
                 </form>
@@ -753,7 +753,7 @@ export default function HomePage() {
             onClick={() => setActiveScreen("bookings")}
           >
             <CalendarDays className="mr-3 h-4 w-4" />
-            Meus Agendamentos
+            Mis Reservas
           </Button>
 
           {user.isAdmin && (
@@ -764,7 +764,7 @@ export default function HomePage() {
                 onClick={() => setActiveScreen("rooms")}
               >
                 <Settings className="mr-3 h-4 w-4" />
-                Gerenciar Salas
+                Gestionar Salas
               </Button>
               <Button
                 variant={activeScreen === "users" ? "default" : "ghost"}
@@ -772,7 +772,7 @@ export default function HomePage() {
                 onClick={() => setActiveScreen("users")}
               >
                 <Users className="mr-3 h-4 w-4" />
-                Gerenciar Usuários
+                Gestionar Usuarios
               </Button>
             </>
           )}
@@ -794,7 +794,7 @@ export default function HomePage() {
             onClick={handleLogout}
           >
             <LogOut className="mr-3 h-4 w-4" />
-            Sair
+            Salir
           </Button>
         </div>
       </div>
@@ -805,11 +805,11 @@ export default function HomePage() {
           <div className="flex-1 overflow-auto p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-600">Visão geral dos agendamentos</p>
+                <h1 className="text-2xl font-bold text-gray-900">Tablero</h1>
+                <p className="text-gray-600">Vista general de las reservas</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-500">Hoje</p>
+                <p className="text-sm text-gray-500">Hoy</p>
                 <p className="font-semibold text-gray-900">
                   {new Date().toLocaleDateString('pt-BR', { 
                     day: 'numeric', 
@@ -827,7 +827,7 @@ export default function HomePage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Agendamentos Hoje</p>
+                        <p className="text-sm text-gray-500 mb-1">Reservas Hoy</p>
                         {statsLoading ? (
                           <Skeleton className="h-8 w-16" />
                         ) : (
@@ -845,7 +845,7 @@ export default function HomePage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Salas Ativas</p>
+                        <p className="text-sm text-gray-500 mb-1">Salas Activas</p>
                         {statsLoading ? (
                           <Skeleton className="h-8 w-16" />
                         ) : (
@@ -863,7 +863,7 @@ export default function HomePage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Taxa de Ocupação</p>
+                        <p className="text-sm text-gray-500 mb-1">Tasa de Ocupación</p>
                         {statsLoading ? (
                           <Skeleton className="h-8 w-16" />
                         ) : (
@@ -881,7 +881,7 @@ export default function HomePage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Usuários Ativos</p>
+                        <p className="text-sm text-gray-500 mb-1">Usuarios Activos</p>
                         {statsLoading ? (
                           <Skeleton className="h-8 w-16" />
                         ) : (
@@ -902,7 +902,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Salas Mais Reservadas</CardTitle>
+                    <CardTitle>Salas Más Reservadas</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {roomStatsLoading ? (
@@ -928,7 +928,7 @@ export default function HomePage() {
                             </div>
                             <div className="text-right">
                               <p className="font-semibold text-gray-900">{room.bookingCount}</p>
-                              <p className="text-sm text-gray-500">agendamentos</p>
+                              <p className="text-sm text-gray-500">reservas</p>
                             </div>
                           </div>
                         ))}
@@ -963,7 +963,7 @@ export default function HomePage() {
                             </div>
                             <div className="text-right">
                               <p className="font-semibold text-error">{room.bookingCount}</p>
-                              <p className="text-sm text-gray-500">agendamentos</p>
+                              <p className="text-sm text-gray-500">reservas</p>
                             </div>
                           </div>
                         ))}
@@ -1058,10 +1058,10 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
-                    {user?.isAdmin && showAllBookings ? "Todos os Agendamentos" : "Meus Agendamentos"}
+                    {user?.isAdmin && showAllBookings ? "Todas las Reservas" : "Mis Reservas"}
                   </h1>
                   <p className="text-gray-600">
-                    {user?.isAdmin && showAllBookings ? "Visualize todos os agendamentos do sistema" : "Gerencie seus agendamentos de salas"}
+                    {user?.isAdmin && showAllBookings ? "Visualice todas las reservas del sistema" : "Gestione sus reservas de salas"}
                   </p>
                 </div>
                 {user?.isAdmin && (
@@ -1072,7 +1072,7 @@ export default function HomePage() {
                       id="show-all-bookings"
                     />
                     <label htmlFor="show-all-bookings" className="text-sm text-gray-600">
-                      Ver todos
+                      Ver todas
                     </label>
                   </div>
                 )}
@@ -1081,8 +1081,8 @@ export default function HomePage() {
 
             <Tabs defaultValue="upcoming" className="w-full">
               <TabsList>
-                <TabsTrigger value="upcoming">Próximos</TabsTrigger>
-                <TabsTrigger value="all">Todos</TabsTrigger>
+                <TabsTrigger value="upcoming">Próximas</TabsTrigger>
+                <TabsTrigger value="all">Todas</TabsTrigger>
               </TabsList>
 
               <TabsContent value="upcoming" className="space-y-4">
