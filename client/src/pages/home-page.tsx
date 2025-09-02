@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -1068,10 +1068,10 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
-                    {user?.isAdmin && showAllBookings ? "Todas las Reservas" : "Mis Reservas"}
+                    {user?.isAdmin && showAllBookings ? "Próximas Reservas" : "Mis Próximas Reservas"}
                   </h1>
                   <p className="text-gray-600">
-                    {user?.isAdmin && showAllBookings ? "Visualice todas las reservas del sistema" : "Gestione sus reservas de salas"}
+                    {user?.isAdmin && showAllBookings ? "Visualice las próximas reservas del sistema" : "Gestione sus próximas reservas de salas"}
                   </p>
                 </div>
                 {user?.isAdmin && (
@@ -1089,180 +1089,85 @@ export default function HomePage() {
               </div>
             </div>
 
-            <Tabs defaultValue="upcoming" className="w-full">
-              <TabsList>
-                <TabsTrigger value="upcoming">Próximas</TabsTrigger>
-                <TabsTrigger value="all">Todas</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="upcoming" className="space-y-4">
-                {bookingsLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-32 w-full" />
-                    ))}
-                  </div>
-                ) : !displayBookings || displayBookings.filter(booking => {
+            <div className="space-y-4">
+              {bookingsLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-32 w-full" />
+                  ))}
+                </div>
+              ) : !displayBookings || displayBookings.filter(booking => {
+                const bookingDateTime = new Date(`${booking.date}T${booking.endTime}:00`);
+                const now = new Date();
+                return bookingDateTime > now;
+              }).length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Ninguna reserva próxima encontrada</p>
+                    <Button onClick={() => setNewBookingOpen(true)} className="mt-4">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Crear Reserva
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                displayBookings.filter(booking => {
                   const bookingDateTime = new Date(`${booking.date}T${booking.endTime}:00`);
                   const now = new Date();
                   return bookingDateTime > now;
-                }).length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-8">
-                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">Ninguna reserva encontrada</p>
-                      <Button onClick={() => setNewBookingOpen(true)} className="mt-4">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Crear Reserva
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  displayBookings.filter(booking => {
-                    const bookingDateTime = new Date(`${booking.date}T${booking.endTime}:00`);
-                    const now = new Date();
-                    return bookingDateTime > now;
-                  }).map((booking: BookingWithDetails) => (
-                    <Card key={booking.id}>
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{booking.title}</h3>
-                            {booking.description && (
-                              <p className="text-gray-600 mb-3">{booking.description}</p>
-                            )}
-                            {booking.responsavel && (
-                              <p className="text-gray-600 mb-3">
-                                <span className="font-medium">Responsable:</span> {booking.responsavel}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center space-x-6 text-sm text-gray-500">
-                              <div className="flex items-center space-x-2">
-                                <Calendar className="h-4 w-4" />
-                                <span>{formatDate(booking.date)}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Clock className="h-4 w-4" />
-                                <span>{booking.startTime} - {booking.endTime}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <DoorOpen className="h-4 w-4" />
-                                <span>{booking.room.name}</span>
-                              </div>
-                            </div>
-                          </div>
+                }).map((booking: BookingWithDetails) => (
+                  <Card key={booking.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">{booking.title}</h3>
+                          {booking.description && (
+                            <p className="text-gray-600 mb-3">{booking.description}</p>
+                          )}
+                          {booking.responsavel && (
+                            <p className="text-gray-600 mb-3">
+                              <span className="font-medium">Responsable:</span> {booking.responsavel}
+                            </p>
+                          )}
                           
-                          <div className="flex items-center space-x-3 ml-4">
-                            <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
-                              {booking.status === "confirmed" ? "Confirmado" : "Pendente"}
-                            </Badge>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => deleteBookingMutation.mutate(booking.id)}
-                                disabled={deleteBookingMutation.isPending}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                          <div className="flex items-center space-x-6 text-sm text-gray-500">
+                            <div className="flex items-center space-x-2">
+                              <Calendar className="h-4 w-4" />
+                              <span>{formatDate(booking.date)}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Clock className="h-4 w-4" />
+                              <span>{booking.startTime} - {booking.endTime}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <DoorOpen className="h-4 w-4" />
+                              <span>{booking.room.name}</span>
                             </div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </TabsContent>
-
-              <TabsContent value="all" className="space-y-4">
-                {bookingsLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-32 w-full" />
-                    ))}
-                  </div>
-                ) : !displayBookings || displayBookings.length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-8">
-                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">Ninguna reserva encontrada</p>
-                      <Button onClick={() => setNewBookingOpen(true)} className="mt-4">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Crear Reserva
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  displayBookings
-                    .sort((a, b) => {
-                      // Sort by date first (newest first), then by start time
-                      const dateComparison = new Date(b.date).getTime() - new Date(a.date).getTime();
-                      if (dateComparison !== 0) return dateComparison;
-                      return b.startTime.localeCompare(a.startTime);
-                    })
-                    .map((booking: BookingWithDetails) => {
-                      const bookingDateTime = new Date(`${booking.date}T${booking.endTime}:00`);
-                      const now = new Date();
-                      const isPast = bookingDateTime <= now;
-                      
-                      return (
-                        <Card key={booking.id} className={isPast ? "opacity-75" : ""}>
-                          <CardContent className="p-6">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="text-lg font-semibold text-gray-900">{booking.title}</h3>
-                                  {isPast && <Badge variant="secondary" className="text-xs">Finalizada</Badge>}
-                                </div>
-                            {booking.description && (
-                              <p className="text-gray-600 mb-3">{booking.description}</p>
-                            )}
-                            {booking.responsavel && (
-                              <p className="text-gray-600 mb-3">
-                                <span className="font-medium">Responsable:</span> {booking.responsavel}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center space-x-6 text-sm text-gray-500">
-                              <div className="flex items-center space-x-2">
-                                <Calendar className="h-4 w-4" />
-                                <span>{formatDate(booking.date)}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Clock className="h-4 w-4" />
-                                <span>{booking.startTime} - {booking.endTime}</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <DoorOpen className="h-4 w-4" />
-                                <span>{booking.room.name}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center space-x-3 ml-4">
-                            <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
-                              {booking.status === "confirmed" ? "Confirmado" : "Pendente"}
-                            </Badge>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => deleteBookingMutation.mutate(booking.id)}
-                                disabled={deleteBookingMutation.isPending}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
+                        
+                        <div className="flex items-center space-x-3 ml-4">
+                          <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
+                            {booking.status === "confirmed" ? "Confirmado" : "Pendente"}
+                          </Badge>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteBookingMutation.mutate(booking.id)}
+                              disabled={deleteBookingMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-                )}
-              </TabsContent>
-            </Tabs>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           </div>
         )}
 
