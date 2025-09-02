@@ -810,7 +810,7 @@ export default function HomePage() {
               <div className="text-right">
                 <p className="text-sm text-gray-500">Hoy</p>
                 <p className="font-semibold text-gray-900">
-                  {new Date().toLocaleDateString('pt-BR', { 
+                  {new Date().toLocaleDateString('es-ES', { 
                     day: 'numeric', 
                     month: 'long', 
                     year: 'numeric' 
