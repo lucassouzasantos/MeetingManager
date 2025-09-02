@@ -1440,14 +1440,17 @@ export default function HomePage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Usuario de Cocina Asignado</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select 
+                                onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                                defaultValue={field.value || "none"}
+                              >
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Seleccionar usuario de cocina (opcional)" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="">Sin asignar</SelectItem>
+                                  <SelectItem value="none">Sin asignar</SelectItem>
                                   {allUsers?.filter(u => u.isKitchen).map((kitchenUser) => (
                                     <SelectItem key={kitchenUser.id} value={kitchenUser.id}>
                                       {kitchenUser.fullName} ({kitchenUser.username})
@@ -1656,14 +1659,17 @@ export default function HomePage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Usuario de Cocina Asignado</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                      value={field.value || "none"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar usuario de cocina (opcional)" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Sin asignar</SelectItem>
+                        <SelectItem value="none">Sin asignar</SelectItem>
                         {allUsers?.filter(u => u.isKitchen).map((kitchenUser) => (
                           <SelectItem key={kitchenUser.id} value={kitchenUser.id}>
                             {kitchenUser.fullName} ({kitchenUser.username})
