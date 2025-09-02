@@ -89,6 +89,7 @@ export default function HomePage() {
   const { toast } = useToast();
   const [activeScreen, setActiveScreen] = useState("dashboard");
   const { isConnected: wsConnected, lastMessage: wsLastMessage } = useWebSocket();
+  const lastNotificationId = React.useRef<string | null>(null);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [newRoomOpen, setNewRoomOpen] = useState(false);
   const [editRoomOpen, setEditRoomOpen] = useState(false);
@@ -582,16 +583,21 @@ export default function HomePage() {
 
     // Handle real-time WebSocket notifications
     React.useEffect(() => {
-      if (wsLastMessage?.type === 'NEW_KITCHEN_ORDER') {
-        // Instantly refresh orders when new order arrives
-        queryClient.invalidateQueries({ queryKey: ["/api/kitchen/orders"] });
-        
-        // Show notification toast
-        toast({
-          title: "¡Nuevo pedido de café!",
-          description: wsLastMessage.message || "Ha llegado un nuevo pedido",
-          duration: 5000,
-        });
+      if (wsLastMessage?.type === 'NEW_KITCHEN_ORDER' && wsLastMessage.order?.id) {
+        // Prevent duplicate notifications
+        if (lastNotificationId.current !== wsLastMessage.order.id) {
+          lastNotificationId.current = wsLastMessage.order.id;
+          
+          // Instantly refresh orders when new order arrives
+          queryClient.invalidateQueries({ queryKey: ["/api/kitchen/orders"] });
+          
+          // Show notification toast only once per order
+          toast({
+            title: "¡Nuevo pedido de café!",
+            description: wsLastMessage.message || "Ha llegado un nuevo pedido",
+            duration: 5000,
+          });
+        }
       }
     }, [wsLastMessage]);
 

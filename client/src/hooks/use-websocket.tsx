@@ -12,12 +12,16 @@ export function useWebSocket() {
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
+  const lastMessageRef = useRef<WebSocketMessage | null>(null);
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
+  const isConnecting = useRef(false);
 
   const connect = () => {
-    if (!user?.isKitchen) return;
+    if (!user?.isKitchen || isConnecting.current || ws.current?.readyState === WebSocket.CONNECTING) return;
 
+    isConnecting.current = true;
+    
     try {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -27,6 +31,7 @@ export function useWebSocket() {
       ws.current.onopen = () => {
         console.log("🔗 WebSocket connected");
         setIsConnected(true);
+        isConnecting.current = false;
         
         // Identify as kitchen user
         ws.current?.send(JSON.stringify({
@@ -39,7 +44,19 @@ export function useWebSocket() {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
           console.log("📨 Received WebSocket message:", message);
-          setLastMessage(message);
+          
+          // Only trigger notifications for actual new orders, not connection confirmations
+          if (message.type === 'NEW_KITCHEN_ORDER') {
+            // Prevent duplicate notifications by checking message content
+            const messageKey = `${message.type}-${message.order?.id}-${Date.now()}`;
+            if (lastMessageRef.current?.order?.id !== message.order?.id) {
+              setLastMessage(message);
+              lastMessageRef.current = message;
+            }
+          } else {
+            // For non-notification messages, just log them
+            console.log("📋 System message:", message);
+          }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
         }
@@ -48,9 +65,15 @@ export function useWebSocket() {
       ws.current.onclose = () => {
         console.log("🔌 WebSocket disconnected");
         setIsConnected(false);
+        isConnecting.current = false;
         
-        // Attempt to reconnect after 3 seconds
-        if (user?.isKitchen) {
+        // Clear any existing reconnect timeout
+        if (reconnectTimeout.current) {
+          clearTimeout(reconnectTimeout.current);
+        }
+        
+        // Attempt to reconnect after 3 seconds only if user is still a kitchen user
+        if (user?.isKitchen && !isConnecting.current) {
           reconnectTimeout.current = setTimeout(() => {
             console.log("🔄 Attempting to reconnect WebSocket...");
             connect();
@@ -61,6 +84,7 @@ export function useWebSocket() {
       ws.current.onerror = (error) => {
         console.error("❌ WebSocket error:", error);
         setIsConnected(false);
+        isConnecting.current = false;
       };
     } catch (error) {
       console.error("Failed to create WebSocket connection:", error);
