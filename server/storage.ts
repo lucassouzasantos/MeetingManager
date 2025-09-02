@@ -339,9 +339,17 @@ export class DatabaseStorage implements IStorage {
       .from(bookings)
       .where(eq(bookings.status, "confirmed"));
 
-    // Taxa de ocupação: salas com agendamentos hoje / total de salas ativas
-    const [occupiedRoomsResult] = await db
-      .select({ count: count(sql`DISTINCT ${bookings.roomId}`) })
+    // Taxa de ocupação: tempo total reservado / tempo total disponível de todas as salas
+    // Horário de funcionamento: 7:00 - 18:00 = 11 horas = 660 minutos por sala
+    const workingMinutesPerRoom = 660; // 11 horas * 60 minutos
+    const totalAvailableMinutes = activeRoomsResult.count * workingMinutesPerRoom;
+
+    // Calcular tempo total reservado hoje
+    const todayBookingsWithTime = await db
+      .select({
+        startTime: bookings.startTime,
+        endTime: bookings.endTime
+      })
       .from(bookings)
       .innerJoin(rooms, eq(bookings.roomId, rooms.id))
       .where(and(
@@ -350,8 +358,21 @@ export class DatabaseStorage implements IStorage {
         eq(rooms.isActive, true)
       ));
 
-    const occupancyRate = activeRoomsResult.count > 0 
-      ? Math.round((occupiedRoomsResult.count / activeRoomsResult.count) * 100)
+    let totalReservedMinutes = 0;
+    for (const booking of todayBookingsWithTime) {
+      // Converter horários para minutos para facilitar o cálculo
+      const [startHour, startMin] = booking.startTime.split(':').map(Number);
+      const [endHour, endMin] = booking.endTime.split(':').map(Number);
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = endHour * 60 + endMin;
+      
+      // Somar duração da reserva ao total
+      totalReservedMinutes += (endMinutes - startMinutes);
+    }
+
+    // Taxa de ocupação = (tempo reservado / tempo total disponível) * 100
+    const occupancyRate = totalAvailableMinutes > 0 
+      ? Math.round((totalReservedMinutes / totalAvailableMinutes) * 100)
       : 0;
 
     return {
