@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { insertBookingSchema, insertRoomSchema, type Room, type BookingWithDetails, type User, type KitchenOrderWithDetails } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useWebSocket } from "@/hooks/use-websocket";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -87,6 +88,7 @@ export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [activeScreen, setActiveScreen] = useState("dashboard");
+  const { isConnected: wsConnected, lastMessage: wsLastMessage } = useWebSocket();
   const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [newRoomOpen, setNewRoomOpen] = useState(false);
   const [editRoomOpen, setEditRoomOpen] = useState(false);
@@ -577,6 +579,21 @@ export default function HomePage() {
       refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
       enabled: Boolean(user?.isKitchen),
     });
+
+    // Handle real-time WebSocket notifications
+    React.useEffect(() => {
+      if (wsLastMessage?.type === 'NEW_KITCHEN_ORDER') {
+        // Instantly refresh orders when new order arrives
+        queryClient.invalidateQueries({ queryKey: ["/api/kitchen/orders"] });
+        
+        // Show notification toast
+        toast({
+          title: "¡Nuevo pedido de café!",
+          description: wsLastMessage.message || "Ha llegado un nuevo pedido",
+          duration: 5000,
+        });
+      }
+    }, [wsLastMessage]);
 
     const completeOrderMutation = useMutation({
       mutationFn: async (orderId: string) => {
@@ -1876,9 +1893,17 @@ export default function HomePage() {
                     <p className="text-gray-600">Gestione las solicitudes de café y alimentos</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">Tiempo Real</p>
-                  <p className="font-semibold text-gray-900">Actualización Automática</p>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-sm text-gray-500">Tiempo Real</p>
+                    <p className="font-semibold text-gray-900">Actualización Automática</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <span className={`text-xs font-medium ${wsConnected ? 'text-green-600' : 'text-red-600'}`}>
+                      {wsConnected ? 'Conectado' : 'Desconectado'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

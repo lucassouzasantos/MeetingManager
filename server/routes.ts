@@ -1,9 +1,25 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { insertRoomSchema, insertBookingSchema } from "@shared/schema";
 import { z } from "zod";
+
+// Store WebSocket connections by user ID
+const kitchenConnections = new Map<string, WebSocket[]>();
+
+// Helper function to send notifications to kitchen users
+export function notifyKitchenUsers(kitchenUserId: string, data: any) {
+  const userConnections = kitchenConnections.get(kitchenUserId);
+  if (userConnections) {
+    userConnections.forEach(ws => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(data));
+      }
+    });
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -236,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log("⚠️  No kitchen user assigned to room:", room?.name || bookingData.roomId);
             // Don't create kitchen order if no kitchen user is assigned to this room
           } else {
-            await storage.createKitchenOrder({
+            const kitchenOrder = await storage.createKitchenOrder({
               bookingId: booking.id,
               roomId: bookingData.roomId,
               userId: room.assignedKitchenUserId, // Use the assigned kitchen user instead of booking user
@@ -246,7 +262,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
               orderDate: bookingData.date,
               orderTime: bookingData.startTime,
             });
+            
+            // Send real-time notification to kitchen user
+            notifyKitchenUsers(room.assignedKitchenUserId, {
+              type: 'NEW_KITCHEN_ORDER',
+              order: kitchenOrder,
+              booking: {
+                title: booking.title,
+                date: bookingData.date,
+                startTime: bookingData.startTime,
+                endTime: bookingData.endTime,
+                room: room.name
+              },
+              message: `Nuevo pedido de café para ${room.name}`
+            });
+            
             console.log("📧 Kitchen order created for assigned user:", room.assignedKitchenUserId, "for booking:", booking.id);
+            console.log("🔔 Real-time notification sent to kitchen user:", room.assignedKitchenUserId);
           }
         } catch (kitchenError) {
           console.error("⚠️  Failed to create kitchen order:", kitchenError);
@@ -442,5 +474,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+
+  // Setup WebSocket server for real-time notifications
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws, req) => {
+    console.log('📡 WebSocket connection established');
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        if (data.type === 'KITCHEN_USER_CONNECT' && data.userId) {
+          // Store this connection for the kitchen user
+          if (!kitchenConnections.has(data.userId)) {
+            kitchenConnections.set(data.userId, []);
+          }
+          kitchenConnections.get(data.userId)!.push(ws);
+          
+          console.log(`🍽️ Kitchen user ${data.userId} connected to WebSocket`);
+          
+          // Send confirmation
+          ws.send(JSON.stringify({
+            type: 'CONNECTION_CONFIRMED',
+            message: 'Connected to kitchen notifications'
+          }));
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      // Remove this connection from all kitchen user connections
+      for (const [userId, connections] of kitchenConnections.entries()) {
+        const index = connections.indexOf(ws);
+        if (index !== -1) {
+          connections.splice(index, 1);
+          if (connections.length === 0) {
+            kitchenConnections.delete(userId);
+          }
+          console.log(`🔌 Kitchen user ${userId} disconnected from WebSocket`);
+          break;
+        }
+      }
+    });
+    
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+  });
+  
   return httpServer;
 }
