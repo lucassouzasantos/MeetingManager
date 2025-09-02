@@ -444,6 +444,25 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
+  async getKitchenOrdersByUser(userId: string): Promise<KitchenOrderWithDetails[]> {
+    return await db
+      .select()
+      .from(kitchenOrders)
+      .leftJoin(bookings, eq(kitchenOrders.bookingId, bookings.id))
+      .leftJoin(users, eq(kitchenOrders.userId, users.id))
+      .leftJoin(rooms, eq(kitchenOrders.roomId, rooms.id))
+      .where(eq(kitchenOrders.userId, userId))
+      .orderBy(desc(kitchenOrders.createdAt))
+      .then(results =>
+        results.map(result => ({
+          ...result.kitchen_orders,
+          booking: result.bookings!,
+          user: result.users!,
+          room: result.rooms!,
+        }))
+      );
+  }
+
   async createKitchenOrder(order: InsertKitchenOrder): Promise<KitchenOrder> {
     const [newOrder] = await db
       .insert(kitchenOrders)

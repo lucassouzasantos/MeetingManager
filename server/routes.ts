@@ -229,17 +229,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create kitchen order if cafe service was requested
       if (bookingData.cafeRequested && bookingData.peopleCount) {
         try {
-          await storage.createKitchenOrder({
-            bookingId: booking.id,
-            roomId: bookingData.roomId,
-            userId: req.user!.id,
-            peopleCount: bookingData.peopleCount,
-            requestedMeals: bookingData.requestedMeals || "",
-            requestedDrinks: bookingData.requestedDrinks || "",
-            orderDate: bookingData.date,
-            orderTime: bookingData.startTime,
-          });
-          console.log("📧 Kitchen order created automatically for booking:", booking.id);
+          // Get room details to check for assigned kitchen user
+          const room = await storage.getRoom(bookingData.roomId);
+          
+          if (!room?.assignedKitchenUserId) {
+            console.log("⚠️  No kitchen user assigned to room:", room?.name || bookingData.roomId);
+            // Don't create kitchen order if no kitchen user is assigned to this room
+          } else {
+            await storage.createKitchenOrder({
+              bookingId: booking.id,
+              roomId: bookingData.roomId,
+              userId: room.assignedKitchenUserId, // Use the assigned kitchen user instead of booking user
+              peopleCount: bookingData.peopleCount,
+              requestedMeals: bookingData.requestedMeals || "",
+              requestedDrinks: bookingData.requestedDrinks || "",
+              orderDate: bookingData.date,
+              orderTime: bookingData.startTime,
+            });
+            console.log("📧 Kitchen order created for assigned user:", room.assignedKitchenUserId, "for booking:", booking.id);
+          }
         } catch (kitchenError) {
           console.error("⚠️  Failed to create kitchen order:", kitchenError);
           // Don't fail the booking if kitchen order creation fails
@@ -374,7 +382,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const orders = await storage.getKitchenOrders();
+      // Get orders only for rooms where this user is assigned as kitchen responsible
+      const orders = await storage.getKitchenOrdersByUser(req.user!.id);
       res.json(orders);
     } catch (error) {
       console.error("Error fetching kitchen orders:", error);
