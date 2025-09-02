@@ -278,14 +278,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard stats - Admin only
+  // Dashboard stats - Available to all authenticated users
   app.get("/api/dashboard/stats", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
-    }
-
-    if (!req.user?.isAdmin) {
-      return res.status(403).json({ message: "Admin access required" });
     }
 
     try {
