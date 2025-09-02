@@ -109,6 +109,7 @@ export class DatabaseStorage implements IStorage {
       position: users.position,
       email: users.email,
       isAdmin: users.isAdmin,
+      isKitchen: users.isKitchen,
       createdAt: users.createdAt,
       password: sql`''`.mapWith(String).as('password') // Don't return password
     }).from(users).orderBy(users.fullName);

@@ -292,6 +292,26 @@ export default function HomePage() {
     },
   });
 
+  const updateUserKitchenMutation = useMutation({
+    mutationFn: async ({ id, isKitchen }: { id: string; isKitchen: boolean }) => {
+      await apiRequest("PATCH", `/api/users/${id}/kitchen`, { isKitchen });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Permisos de cocina actualizados",
+        description: "Los permisos de cocina del usuario han sido actualizados correctamente",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error al actualizar permisos de cocina",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const changePasswordMutation = useMutation({
     mutationFn: async (data: { userId: string; newPassword: string }) => {
       const res = await apiRequest("PUT", `/api/users/${data.userId}/password`, { password: data.newPassword });
@@ -1345,9 +1365,30 @@ export default function HomePage() {
                               disabled={updateUserAdminMutation.isPending || userItem.id === user.id}
                             />
                           </div>
-                          {userItem.isAdmin && (
-                            <Badge variant="default">Admin</Badge>
-                          )}
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-600">Cocina</span>
+                            <Switch
+                              checked={userItem.isKitchen}
+                              onCheckedChange={(checked) => 
+                                updateUserKitchenMutation.mutate({ 
+                                  id: userItem.id, 
+                                  isKitchen: checked 
+                                })
+                              }
+                              disabled={updateUserKitchenMutation.isPending}
+                            />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {userItem.isAdmin && (
+                              <Badge variant="default">Admin</Badge>
+                            )}
+                            {userItem.isKitchen && (
+                              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                                <Coffee className="h-3 w-3 mr-1" />
+                                Cocina
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardContent>

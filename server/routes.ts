@@ -42,6 +42,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/users/:id/kitchen", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const { isKitchen } = req.body;
+      const success = await storage.updateUserKitchenStatus(req.params.id, isKitchen);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ message: "User kitchen status updated successfully" });
+    } catch (error) {
+      console.error("Error updating user kitchen status:", error);
+      res.status(500).json({ message: "Failed to update user kitchen status" });
+    }
+  });
+
   app.put("/api/users/:id/password", async (req, res) => {
     if (!req.isAuthenticated() || !req.user?.isAdmin) {
       return res.status(403).json({ message: "Admin access required" });
