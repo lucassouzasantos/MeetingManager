@@ -87,10 +87,10 @@ export default function HomePage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showAllBookings, setShowAllBookings] = useState(false);
 
-  // Queries - Admin only
+  // Queries - Available to all users
   const { data: dashboardStats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
-    enabled: Boolean(user?.isAdmin),
+    enabled: Boolean(user),
   });
 
   const { data: roomStats, isLoading: roomStatsLoading } = useQuery<RoomStats[]>({
@@ -830,9 +830,9 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Statistics Cards - Admin Only */}
-            {user.isAdmin && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Statistics Cards - Available to All Users */}
+            {user && (
+              <div className={`grid grid-cols-1 md:grid-cols-2 ${user.isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -887,23 +887,25 @@ export default function HomePage() {
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Usuarios Activos</p>
-                        {statsLoading ? (
-                          <Skeleton className="h-8 w-16" />
-                        ) : (
-                          <p className="text-2xl font-bold text-gray-900">{dashboardStats?.activeUsers || 0}</p>
-                        )}
+                {user.isAdmin && (
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Usuarios Activos</p>
+                          {statsLoading ? (
+                            <Skeleton className="h-8 w-16" />
+                          ) : (
+                            <p className="text-2xl font-bold text-gray-900">{dashboardStats?.activeUsers || 0}</p>
+                          )}
+                        </div>
+                        <div className="w-12 h-12 bg-secondary bg-opacity-10 rounded-full flex items-center justify-center">
+                          <Users className="text-secondary h-5 w-5" />
+                        </div>
                       </div>
-                      <div className="w-12 h-12 bg-secondary bg-opacity-10 rounded-full flex items-center justify-center">
-                        <Users className="text-secondary h-5 w-5" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
 
