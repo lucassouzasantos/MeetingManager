@@ -161,12 +161,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateRoom(id: string, room: Partial<InsertRoom>): Promise<Room | undefined> {
-    const [updatedRoom] = await db
-      .update(rooms)
-      .set(room)
-      .where(eq(rooms.id, id))
-      .returning();
-    return updatedRoom || undefined;
+    try {
+      // Handle assignedKitchenUserId validation
+      if (room.assignedKitchenUserId !== undefined) {
+        if (room.assignedKitchenUserId === null || room.assignedKitchenUserId === "" || room.assignedKitchenUserId === "none") {
+          // Set to null for "no assignment"
+          room.assignedKitchenUserId = null;
+        } else {
+          // Validate that the user exists and is a kitchen user
+          const kitchenUser = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, room.assignedKitchenUserId))
+            .limit(1);
+          
+          if (kitchenUser.length === 0) {
+            throw new Error(`User with ID ${room.assignedKitchenUserId} not found`);
+          }
+          
+          if (!kitchenUser[0].isKitchen) {
+            throw new Error(`User ${kitchenUser[0].fullName} is not a kitchen user`);
+          }
+        }
+      }
+
+      const [updatedRoom] = await db
+        .update(rooms)
+        .set(room)
+        .where(eq(rooms.id, id))
+        .returning();
+      return updatedRoom || undefined;
+    } catch (error) {
+      console.error("Error updating room:", error);
+      throw error;
+    }
   }
 
   async deleteRoom(id: string): Promise<boolean> {
