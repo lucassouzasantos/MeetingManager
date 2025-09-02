@@ -1,4 +1,4 @@
-import { users, rooms, bookings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type BookingWithDetails } from "@shared/schema";
+import { users, rooms, bookings, kitchenOrders, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type BookingWithDetails, type KitchenOrder, type InsertKitchenOrder, type KitchenOrderWithDetails } from "@shared/schema";
 import { db } from "./db";
 import { eq, ne, and, desc, count, sql } from "drizzle-orm";
 import session from "express-session";
@@ -16,6 +16,7 @@ export interface IStorage {
   updateUserPassword(id: string, hashedPassword: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
   updateUserAdminStatus(id: string, isAdmin: boolean): Promise<boolean>;
+  updateUserKitchenStatus(id: string, isKitchen: boolean): Promise<boolean>;
   
   getRooms(): Promise<Room[]>;
   getRoom(id: string): Promise<Room | undefined>;
@@ -38,6 +39,12 @@ export interface IStorage {
     occupancyRate: number;
     activeUsers: number;
   }>;
+
+  // Kitchen order methods
+  getKitchenOrders(): Promise<KitchenOrderWithDetails[]>;
+  getKitchenOrdersByRoom(roomId: string): Promise<KitchenOrderWithDetails[]>;
+  createKitchenOrder(order: InsertKitchenOrder): Promise<KitchenOrder>;
+  updateKitchenOrderStatus(id: string, status: 'pending' | 'completed', completedBy?: string): Promise<KitchenOrder | undefined>;
 
   sessionStore: any;
 }
@@ -114,6 +121,21 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return !!updatedUser;
+  }
+
+  async updateUserKitchenStatus(id: string, isKitchen: boolean): Promise<boolean> {
+    try {
+      const result = await db
+        .update(users)
+        .set({ isKitchen: isKitchen ? 1 : 0 })
+        .where(eq(users.id, id))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error updating user kitchen status:", error);
+      return false;
+    }
   }
 
   // Room methods
@@ -381,6 +403,74 @@ export class DatabaseStorage implements IStorage {
       occupancyRate,
       activeUsers: activeUsersResult.count,
     };
+  }
+
+  // Kitchen order methods
+  async getKitchenOrders(): Promise<KitchenOrderWithDetails[]> {
+    return await db
+      .select()
+      .from(kitchenOrders)
+      .leftJoin(bookings, eq(kitchenOrders.bookingId, bookings.id))
+      .leftJoin(users, eq(kitchenOrders.userId, users.id))
+      .leftJoin(rooms, eq(kitchenOrders.roomId, rooms.id))
+      .orderBy(desc(kitchenOrders.createdAt))
+      .then(results =>
+        results.map(result => ({
+          ...result.kitchen_orders,
+          booking: result.bookings!,
+          user: result.users!,
+          room: result.rooms!,
+        }))
+      );
+  }
+
+  async getKitchenOrdersByRoom(roomId: string): Promise<KitchenOrderWithDetails[]> {
+    return await db
+      .select()
+      .from(kitchenOrders)
+      .leftJoin(bookings, eq(kitchenOrders.bookingId, bookings.id))
+      .leftJoin(users, eq(kitchenOrders.userId, users.id))
+      .leftJoin(rooms, eq(kitchenOrders.roomId, rooms.id))
+      .where(eq(kitchenOrders.roomId, roomId))
+      .orderBy(desc(kitchenOrders.createdAt))
+      .then(results =>
+        results.map(result => ({
+          ...result.kitchen_orders,
+          booking: result.bookings!,
+          user: result.users!,
+          room: result.rooms!,
+        }))
+      );
+  }
+
+  async createKitchenOrder(order: InsertKitchenOrder): Promise<KitchenOrder> {
+    const [newOrder] = await db
+      .insert(kitchenOrders)
+      .values({
+        ...order,
+        id: nanoid()
+      })
+      .returning();
+    return newOrder;
+  }
+
+  async updateKitchenOrderStatus(id: string, status: 'pending' | 'completed', completedBy?: string): Promise<KitchenOrder | undefined> {
+    const updateData: any = { status };
+    
+    if (status === 'completed') {
+      updateData.completedAt = new Date().toISOString();
+      if (completedBy) {
+        updateData.completedBy = completedBy;
+      }
+    }
+
+    const [updatedOrder] = await db
+      .update(kitchenOrders)
+      .set(updateData)
+      .where(eq(kitchenOrders.id, id))
+      .returning();
+    
+    return updatedOrder || undefined;
   }
 }
 

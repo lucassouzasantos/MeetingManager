@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,7 +33,8 @@ import {
   AlertCircle,
   LogOut,
   User as UserIcon,
-  Key
+  Key,
+  Coffee
 } from "lucide-react";
 
 const bookingFormSchema = insertBookingSchema.extend({
@@ -149,6 +151,10 @@ export default function HomePage() {
         startTime: "",
         endTime: "",
         roomId: "",
+        cafeRequested: false,
+        peopleCount: undefined,
+        requestedMeals: "",
+        requestedDrinks: "",
       });
       
       setNewBookingOpen(false);
@@ -726,6 +732,93 @@ export default function HomePage() {
                     )}
                   />
 
+                  {/* Café Service Section */}
+                  <div className="border rounded-lg p-4 space-y-4 bg-orange-50 border-orange-200">
+                    <FormField
+                      control={bookingForm.control}
+                      name="cafeRequested"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-base font-medium">
+                              Solicitar Servicio de CAFÉ
+                            </FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              Marque esta opción para solicitar servicio de café y alimentos para la reunión
+                            </p>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+
+                    {bookingForm.watch("cafeRequested") && (
+                      <div className="space-y-4 pl-6 border-l-2 border-orange-400">
+                        <FormField
+                          control={bookingForm.control}
+                          name="peopleCount"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cantidad de Personas *</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="100"
+                                  placeholder="Ej: 5"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={bookingForm.control}
+                          name="requestedMeals"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Comidas Deseadas</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Ej: Sandwiches de jamón y queso, frutas variadas, galletas"
+                                  rows={3}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={bookingForm.control}
+                          name="requestedDrinks"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Bebidas Deseadas</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Ej: Café americano, té, agua mineral, jugos naturales"
+                                  rows={3}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-start space-x-3">
                       <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
@@ -767,6 +860,17 @@ export default function HomePage() {
             Mis Reservas
           </Button>
 
+          {user.isKitchen && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => window.location.href = '/cocina'}
+            >
+              <Coffee className="mr-3 h-4 w-4" />
+              Panel de Cocina
+            </Button>
+          )}
+          
           {user.isAdmin && (
             <>
               <Button

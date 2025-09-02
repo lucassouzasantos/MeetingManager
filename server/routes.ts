@@ -68,6 +68,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/users/:id/kitchen", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    try {
+      const { isKitchen } = req.body;
+      const success = await storage.updateUserKitchenStatus(req.params.id, isKitchen);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ message: "User kitchen status updated successfully" });
+    } catch (error) {
+      console.error("Error updating user kitchen status:", error);
+      res.status(500).json({ message: "Failed to update user kitchen status" });
+    }
+  });
+
   // Room routes
   app.get("/api/rooms", async (req, res) => {
     try {
@@ -190,6 +208,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: req.user!.id,
       });
       
+      // Create kitchen order if cafe service was requested
+      if (bookingData.cafeRequested && bookingData.peopleCount) {
+        try {
+          await storage.createKitchenOrder({
+            bookingId: booking.id,
+            roomId: bookingData.roomId,
+            userId: req.user!.id,
+            peopleCount: bookingData.peopleCount,
+            requestedMeals: bookingData.requestedMeals || "",
+            requestedDrinks: bookingData.requestedDrinks || "",
+            orderDate: bookingData.date,
+            orderTime: bookingData.startTime,
+          });
+          console.log("📧 Kitchen order created automatically for booking:", booking.id);
+        } catch (kitchenError) {
+          console.error("⚠️  Failed to create kitchen order:", kitchenError);
+          // Don't fail the booking if kitchen order creation fails
+        }
+      }
+      
       res.status(201).json(booking);
     } catch (error) {
       console.error("Error creating booking:", error);
@@ -308,6 +346,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching room stats:", error);
       res.status(500).json({ message: "Failed to fetch room stats" });
+    }
+  });
+
+  // Kitchen order routes
+  app.get("/api/kitchen/orders", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isKitchen) {
+      return res.status(403).json({ message: "Kitchen access required" });
+    }
+
+    try {
+      const orders = await storage.getKitchenOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching kitchen orders:", error);
+      res.status(500).json({ message: "Failed to fetch kitchen orders" });
+    }
+  });
+
+  app.get("/api/kitchen/orders/room/:roomId", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isKitchen) {
+      return res.status(403).json({ message: "Kitchen access required" });
+    }
+
+    try {
+      const orders = await storage.getKitchenOrdersByRoom(req.params.roomId);
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching kitchen orders for room:", error);
+      res.status(500).json({ message: "Failed to fetch kitchen orders" });
+    }
+  });
+
+  app.post("/api/kitchen/orders", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      // This will be called automatically when a booking with cafe service is created
+      const orderData = {
+        ...req.body,
+        userId: req.user!.id,
+      };
+      const order = await storage.createKitchenOrder(orderData);
+      res.status(201).json(order);
+    } catch (error) {
+      console.error("Error creating kitchen order:", error);
+      res.status(500).json({ message: "Failed to create kitchen order" });
+    }
+  });
+
+  app.patch("/api/kitchen/orders/:id/complete", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user?.isKitchen) {
+      return res.status(403).json({ message: "Kitchen access required" });
+    }
+
+    try {
+      const order = await storage.updateKitchenOrderStatus(req.params.id, 'completed', req.user!.id);
+      if (!order) {
+        return res.status(404).json({ message: "Kitchen order not found" });
+      }
+      res.json(order);
+    } catch (error) {
+      console.error("Error completing kitchen order:", error);
+      res.status(500).json({ message: "Failed to complete kitchen order" });
     }
   });
 
