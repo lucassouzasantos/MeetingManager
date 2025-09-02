@@ -204,9 +204,7 @@ export default function AuthPage() {
                         <div></div>
                         <Dialog open={recoveryOpen} onOpenChange={setRecoveryOpen}>
                           <DialogTrigger asChild>
-                            <Button variant="link" className="px-0 text-primary">
-                              Olvidé mi contraseña
-                            </Button>
+                            <Button variant="link" className="px-0 text-primary">Olvidaste tu contraseña? llame al 102</Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
@@ -429,8 +427,6 @@ export default function AuthPage() {
           </Card>
         </div>
       </div>
-
-      
     </div>
   );
 }
