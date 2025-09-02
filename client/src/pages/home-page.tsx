@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
-import { insertBookingSchema, insertRoomSchema, type Room, type BookingWithDetails, type User } from "@shared/schema";
+import { insertBookingSchema, insertRoomSchema, type Room, type BookingWithDetails, type User, type KitchenOrderWithDetails } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -34,8 +34,13 @@ import {
   LogOut,
   User as UserIcon,
   Key,
-  Coffee
+  Coffee,
+  CheckCircle2,
+  Utensils,
+  Bell
 } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 
 const bookingFormSchema = insertBookingSchema.extend({
   date: z.string().min(1, "La fecha es obligatoria"),
@@ -556,6 +561,208 @@ export default function HomePage() {
     }
   }, [watchedDate, watchedRoomId, watchedStartTime, availableEndTimes, bookingForm]);
 
+  // Kitchen Panel Component
+  const KitchenPanelContent = () => {
+    const [selectedStatus, setSelectedStatus] = useState<'pending' | 'completed' | 'all'>('pending');
+
+    const { data: orders, isLoading: ordersLoading } = useQuery<KitchenOrderWithDetails[]>({
+      queryKey: ["/api/kitchen/orders"],
+      refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+      enabled: Boolean(user?.isKitchen),
+    });
+
+    const completeOrderMutation = useMutation({
+      mutationFn: async (orderId: string) => {
+        const res = await apiRequest("PATCH", `/api/kitchen/orders/${orderId}/complete`, {});
+        return await res.json();
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/kitchen/orders"] });
+        toast({
+          title: "Pedido completado",
+          description: "El pedido ha sido marcado como atendido",
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "No se pudo completar el pedido",
+          variant: "destructive",
+        });
+      },
+    });
+
+    const filteredOrders = orders?.filter(order => {
+      if (selectedStatus === 'all') return true;
+      return order.status === selectedStatus;
+    }) || [];
+
+    const pendingCount = orders?.filter(o => o.status === 'pending').length || 0;
+    const completedCount = orders?.filter(o => o.status === 'completed').length || 0;
+
+    if (ordersLoading) {
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-24" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-48" />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Pedidos Pendientes</p>
+                  <p className="text-2xl font-bold text-orange-600">{pendingCount}</p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <Clock className="text-orange-600 h-5 w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Completados Hoy</p>
+                  <p className="text-2xl font-bold text-green-600">{completedCount}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle2 className="text-green-600 h-5 w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Total Pedidos</p>
+                  <p className="text-2xl font-bold text-blue-600">{orders?.length || 0}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Utensils className="text-blue-600 h-5 w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filter Buttons */}
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant={selectedStatus === 'pending' ? "default" : "outline"}
+            onClick={() => setSelectedStatus('pending')}
+            className="gap-2"
+          >
+            <Clock className="h-4 w-4" />
+            Pendientes ({pendingCount})
+          </Button>
+          <Button
+            variant={selectedStatus === 'completed' ? "default" : "outline"}
+            onClick={() => setSelectedStatus('completed')}
+            className="gap-2"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Completados ({completedCount})
+          </Button>
+          <Button
+            variant={selectedStatus === 'all' ? "default" : "outline"}
+            onClick={() => setSelectedStatus('all')}
+            className="gap-2"
+          >
+            <Bell className="h-4 w-4" />
+            Todos ({orders?.length || 0})
+          </Button>
+        </div>
+
+        {/* Orders Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredOrders.length === 0 ? (
+            <div className="col-span-full">
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Coffee className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">
+                    {selectedStatus === 'pending' ? 'No hay pedidos pendientes' :
+                     selectedStatus === 'completed' ? 'No hay pedidos completados' :
+                     'No hay pedidos registrados'}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            filteredOrders.map((order) => (
+              <Card key={order.id} className={`${order.status === 'pending' ? 'border-orange-200 bg-orange-50' : 'border-green-200 bg-green-50'}`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{order.bookingTitle}</CardTitle>
+                    <Badge variant={order.status === 'pending' ? "destructive" : "default"}>
+                      {order.status === 'pending' ? 'Pendiente' : 'Completado'}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p><strong>Sala:</strong> {order.roomName}</p>
+                    <p><strong>Solicitado por:</strong> {order.requesterName}</p>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="text-sm">
+                      <p><strong>Fecha:</strong> {format(parseISO(order.bookingDate), "d 'de' MMMM, yyyy", { locale: es })}</p>
+                      <p><strong>Hora:</strong> {order.bookingStartTime} - {order.bookingEndTime}</p>
+                    </div>
+                    
+                    {order.specialRequests && (
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-sm"><strong>Solicitud especial:</strong></p>
+                        <p className="text-sm text-gray-700 mt-1">{order.specialRequests}</p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>Solicitado: {format(parseISO(order.createdAt), "dd/MM/yyyy HH:mm")}</span>
+                      {order.status === 'completed' && order.completedAt && (
+                        <span>Completado: {format(parseISO(order.completedAt), "dd/MM/yyyy HH:mm")}</span>
+                      )}
+                    </div>
+
+                    {order.status === 'pending' && (
+                      <Button
+                        onClick={() => completeOrderMutation.mutate(order.id)}
+                        disabled={completeOrderMutation.isPending}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Marcar como Atendido
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (!user) return null;
 
   return (
@@ -886,9 +1093,9 @@ export default function HomePage() {
 
           {user.isKitchen && (
             <Button
-              variant="ghost"
+              variant={activeScreen === "kitchen" ? "default" : "ghost"}
               className="w-full justify-start"
-              onClick={() => window.location.href = '/cocina'}
+              onClick={() => setActiveScreen("kitchen")}
             >
               <Coffee className="mr-3 h-4 w-4" />
               Panel de Cocina
@@ -1628,6 +1835,28 @@ export default function HomePage() {
                 })
               )}
             </div>
+          </div>
+        )}
+
+        {activeScreen === "kitchen" && user?.isKitchen && (
+          <div className="flex-1 overflow-auto p-6">
+            <div className="mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Coffee className="h-8 w-8 text-orange-600" />
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Panel de Cocina</h1>
+                    <p className="text-gray-600">Gestione las solicitudes de café y alimentos</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Tiempo Real</p>
+                  <p className="font-semibold text-gray-900">Actualización Automática</p>
+                </div>
+              </div>
+            </div>
+
+            <KitchenPanelContent />
           </div>
         )}
       </div>
