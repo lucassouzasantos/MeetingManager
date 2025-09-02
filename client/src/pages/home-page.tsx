@@ -48,6 +48,7 @@ const editRoomFormSchema = insertRoomSchema.pick({
   name: true,
   location: true,
   capacity: true,
+  assignedKitchenUserId: true,
 });
 
 const changePasswordSchema = z.object({
@@ -186,6 +187,7 @@ export default function HomePage() {
         name: "",
         location: "",
         capacity: 1,
+        assignedKitchenUserId: "",
       });
       
       setNewRoomOpen(false);
@@ -341,6 +343,7 @@ export default function HomePage() {
       name: "",
       location: "",
       capacity: 1,
+      assignedKitchenUserId: "",
     },
   });
 
@@ -371,6 +374,7 @@ export default function HomePage() {
       name: room.name,
       location: room.location,
       capacity: room.capacity,
+      assignedKitchenUserId: room.assignedKitchenUserId || "",
     });
     setEditRoomOpen(true);
   };
@@ -1430,6 +1434,35 @@ export default function HomePage() {
                           )}
                         />
 
+                        <FormField
+                          control={roomForm.control}
+                          name="assignedKitchenUserId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Usuario de Cocina Asignado</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar usuario de cocina (opcional)" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="">Sin asignar</SelectItem>
+                                  {allUsers?.filter(u => u.isKitchen).map((kitchenUser) => (
+                                    <SelectItem key={kitchenUser.id} value={kitchenUser.id}>
+                                      {kitchenUser.fullName} ({kitchenUser.username})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-sm text-muted-foreground">
+                                Este usuario recibirá las notificaciones de pedidos de café para esta sala
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
                         <div className="flex gap-3">
                           <Button 
                             type="button" 
@@ -1492,6 +1525,14 @@ export default function HomePage() {
                                 <span>{roomBookings} reservas</span>
                               </div>
                             </div>
+                            {room.assignedKitchenUserId && (
+                              <div className="mt-2 flex items-center space-x-1 text-xs text-green-600">
+                                <Coffee className="h-3 w-3" />
+                                <span>
+                                  Cocina: {allUsers?.find(u => u.id === room.assignedKitchenUserId)?.fullName || 'Usuario asignado'}
+                                </span>
+                              </div>
+                            )}
                           </div>
                           <div className="flex space-x-2 ml-4">
                             <Button
@@ -1604,6 +1645,35 @@ export default function HomePage() {
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editRoomForm.control}
+                name="assignedKitchenUserId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Usuario de Cocina Asignado</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar usuario de cocina (opcional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Sin asignar</SelectItem>
+                        {allUsers?.filter(u => u.isKitchen).map((kitchenUser) => (
+                          <SelectItem key={kitchenUser.id} value={kitchenUser.id}>
+                            {kitchenUser.fullName} ({kitchenUser.username})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">
+                      Este usuario recibirá las notificaciones de pedidos de café para esta sala
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

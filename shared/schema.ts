@@ -21,7 +21,7 @@ export const rooms = sqliteTable("rooms", {
   location: text("location").notNull(),
   capacity: integer("capacity").notNull(),
   isActive: integer("is_active", { mode: 'boolean' }).notNull().default(true),
-  kitchenStaff: text("kitchen_staff"), // JSON string de IDs de usuarios de cocina asignados
+  assignedKitchenUserId: text("assigned_kitchen_user_id").references(() => users.id), // Usuario de cocina asignado para recibir notificaciones
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
@@ -112,6 +112,9 @@ export const insertRoomSchema = createInsertSchema(rooms).pick({
   name: true,
   location: true,
   capacity: true,
+  assignedKitchenUserId: true,
+}).extend({
+  assignedKitchenUserId: z.string().optional(),
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).pick({
