@@ -1194,12 +1194,27 @@ export default function HomePage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  displayBookings.map((booking: BookingWithDetails) => (
-                    <Card key={booking.id}>
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{booking.title}</h3>
+                  displayBookings
+                    .sort((a, b) => {
+                      // Sort by date first (newest first), then by start time
+                      const dateComparison = new Date(b.date).getTime() - new Date(a.date).getTime();
+                      if (dateComparison !== 0) return dateComparison;
+                      return b.startTime.localeCompare(a.startTime);
+                    })
+                    .map((booking: BookingWithDetails) => {
+                      const bookingDateTime = new Date(`${booking.date}T${booking.endTime}:00`);
+                      const now = new Date();
+                      const isPast = bookingDateTime <= now;
+                      
+                      return (
+                        <Card key={booking.id} className={isPast ? "opacity-75" : ""}>
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="text-lg font-semibold text-gray-900">{booking.title}</h3>
+                                  {isPast && <Badge variant="secondary" className="text-xs">Finalizada</Badge>}
+                                </div>
                             {booking.description && (
                               <p className="text-gray-600 mb-3">{booking.description}</p>
                             )}
@@ -1243,7 +1258,8 @@ export default function HomePage() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))
+                  );
+                })
                 )}
               </TabsContent>
             </Tabs>
