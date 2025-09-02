@@ -128,7 +128,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db
         .update(users)
-        .set({ isKitchen: isKitchen ? 1 : 0 })
+        .set({ isKitchen: isKitchen })
         .where(eq(users.id, id))
         .returning();
       
@@ -259,21 +259,21 @@ export class DatabaseStorage implements IStorage {
 
   async checkBookingConflict(roomId: string, date: string, startTime: string, endTime: string, excludeBookingId?: string): Promise<boolean> {
     // Buscar todos os agendamentos confirmados para a mesma sala e data
-    let query = db
-      .select()
-      .from(bookings)
-      .where(and(
-        eq(bookings.roomId, roomId),
-        eq(bookings.date, date),
-        eq(bookings.status, "confirmed")
-      ));
+    const conditions = [
+      eq(bookings.roomId, roomId),
+      eq(bookings.date, date),
+      eq(bookings.status, "confirmed")
+    ];
 
     // Se há um ID para excluir (edição), adicionar a condição
     if (excludeBookingId) {
-      query = query.where(ne(bookings.id, excludeBookingId));
+      conditions.push(ne(bookings.id, excludeBookingId));
     }
 
-    const existingBookings = await query;
+    const existingBookings = await db
+      .select()
+      .from(bookings)
+      .where(and(...conditions));
     
     console.log(`🔍 Verificando conflitos para sala ${roomId} em ${date} de ${startTime} às ${endTime}`);
     console.log(`   Agendamentos existentes: ${existingBookings.length}`);
