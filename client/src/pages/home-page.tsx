@@ -712,34 +712,39 @@ export default function HomePage() {
               <Card key={order.id} className={`${order.status === 'pending' ? 'border-orange-200 bg-orange-50' : 'border-green-200 bg-green-50'}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{order.bookingTitle}</CardTitle>
+                    <CardTitle className="text-lg">{order.booking?.title || 'Pedido de Café'}</CardTitle>
                     <Badge variant={order.status === 'pending' ? "destructive" : "default"}>
                       {order.status === 'pending' ? 'Pendiente' : 'Completado'}
                     </Badge>
                   </div>
                   <div className="text-sm text-gray-600">
-                    <p><strong>Sala:</strong> {order.roomName}</p>
-                    <p><strong>Solicitado por:</strong> {order.requesterName}</p>
+                    <p><strong>Sala:</strong> {order.room?.name || 'N/A'}</p>
+                    <p><strong>Solicitado por:</strong> {order.user?.fullName || 'N/A'}</p>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="text-sm">
-                      <p><strong>Fecha:</strong> {format(parseISO(order.bookingDate), "d 'de' MMMM, yyyy", { locale: es })}</p>
-                      <p><strong>Hora:</strong> {order.bookingStartTime} - {order.bookingEndTime}</p>
+                      <p><strong>Fecha:</strong> {order.booking?.date ? format(parseISO(order.booking.date), "d 'de' MMMM, yyyy", { locale: es }) : 'Fecha no disponible'}</p>
+                      <p><strong>Hora:</strong> {order.booking?.startTime || 'N/A'} - {order.booking?.endTime || 'N/A'}</p>
                     </div>
                     
-                    {order.specialRequests && (
+                    {(order.requestedMeals || order.requestedDrinks) && (
                       <div className="bg-white p-3 rounded border">
                         <p className="text-sm"><strong>Solicitud especial:</strong></p>
-                        <p className="text-sm text-gray-700 mt-1">{order.specialRequests}</p>
+                        {order.requestedMeals && (
+                          <p className="text-sm text-gray-700 mt-1"><strong>Comidas:</strong> {order.requestedMeals}</p>
+                        )}
+                        {order.requestedDrinks && (
+                          <p className="text-sm text-gray-700 mt-1"><strong>Bebidas:</strong> {order.requestedDrinks}</p>
+                        )}
                       </div>
                     )}
 
                     <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>Solicitado: {format(parseISO(order.createdAt), "dd/MM/yyyy HH:mm")}</span>
+                      <span>Solicitado: {order.createdAt ? format(parseISO(order.createdAt), "dd/MM/yyyy HH:mm") : 'Fecha no disponible'}</span>
                       {order.status === 'completed' && order.completedAt && (
-                        <span>Completado: {format(parseISO(order.completedAt), "dd/MM/yyyy HH:mm")}</span>
+                        <span>Completado: {order.completedAt ? format(parseISO(order.completedAt), "dd/MM/yyyy HH:mm") : 'Fecha no disponible'}</span>
                       )}
                     </div>
 
