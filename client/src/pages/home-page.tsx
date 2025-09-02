@@ -211,16 +211,23 @@ export default function HomePage() {
   });
 
   const deleteBookingMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/bookings/${id}`);
+    mutationFn: async (data: { id: string; isAdminAction?: boolean; bookingOwner?: string }) => {
+      await apiRequest("DELETE", `/api/bookings/${data.id}`);
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/all"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/room-stats"] });
+      
+      const isAdminCancellation = data.isAdminAction && data.bookingOwner !== user?.fullName;
+      
       toast({
-        title: "Reserva cancelada",
-        description: "¡La reserva fue cancelada con éxito!",
+        title: isAdminCancellation ? "Reserva cancelada (Admin)" : "Reserva cancelada",
+        description: isAdminCancellation 
+          ? `Reserva de ${data.bookingOwner} cancelada exitosamente`
+          : "¡La reserva fue cancelada con éxito!",
       });
     },
     onError: (error: Error) => {
@@ -1494,14 +1501,29 @@ export default function HomePage() {
                             {booking.status === "confirmed" ? "Confirmado" : "Pendente"}
                           </Badge>
                           <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => deleteBookingMutation.mutate(booking.id)}
-                              disabled={deleteBookingMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {/* Show cancel button if user owns the booking OR if user is admin */}
+                            {(booking.userId === user?.id || user?.isAdmin) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => deleteBookingMutation.mutate({
+                                  id: booking.id,
+                                  isAdminAction: user?.isAdmin,
+                                  bookingOwner: booking.user.fullName
+                                })}
+                                disabled={deleteBookingMutation.isPending}
+                                title={user?.isAdmin && booking.userId !== user?.id ? 
+                                  "Cancelar reserva (Admin)" : "Cancelar mi reserva"}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {/* Show owner info for admins viewing other people's bookings */}
+                            {user?.isAdmin && booking.userId !== user?.id && (
+                              <Badge variant="outline" className="text-xs">
+                                Por: {booking.user.fullName}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>

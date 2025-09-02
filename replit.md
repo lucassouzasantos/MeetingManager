@@ -8,7 +8,7 @@ The system features a modern, responsive interface built with shadcn/ui componen
 
 **Current Status**: Sistema funcionando completamente com SQLite como banco de dados principal. PostgreSQL/Supabase disponível como opção alternativa via configuração manual.
 
-**Last Updated**: August 28, 2024 - Sistema migrado para SQLite, corrigidos erros de compatibilidade, todas as funcionalidades operacionais.
+**Last Updated**: September 2, 2025 - Funcionalidade de cancelamento administrativo implementada, permitindo que administradores cancelem qualquer reserva.
 
 ## User Preferences
 
@@ -16,12 +16,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-09-02**: Implementação de cancelamento administrativo - admins podem cancelar qualquer reserva
+- **2025-09-02**: Correção de erro de restrição de chave estrangeira no sistema de asignação de usuarios de cocina  
+- **2025-09-02**: Validação robusta para assignedKitchenUserId com manejo de valores null/empty/"none"
 - **2024-08-28**: Migração completa para SQLite como banco padrão
 - **2024-08-28**: Correção de erros de login e queries do React Query
 - **2024-08-28**: Ajustes de compatibilidade SQLite (conversão booleanos para números)
 - **2024-08-28**: Implementação de funcionalidade completa de alteração de senhas
-- **2024-08-27**: Criação de scripts de setup automatizados para SQLite
-- **2024-08-26**: Tentativa de migração para Supabase (problemas de conectividade)
 
 ## Current System Status
 
@@ -31,6 +32,8 @@ Preferred communication style: Simple, everyday language.
 - Gestão de salas (criar, editar, desativar)
 - Gestão de usuários (promover admin, alterar senhas)
 - Sistema de agendamentos com verificação de conflitos
+- **Sistema de cancelamento administrativo - admins podem cancelar qualquer reserva**
+- **Sistema de gestão de usuários de cocina com validação robusta**
 - Interface responsiva com tema claro/escuro
 
 ### 🗄️ Banco de Dados Atual
