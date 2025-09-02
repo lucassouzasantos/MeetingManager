@@ -114,7 +114,7 @@ export function useWebSocket() {
     return () => {
       disconnect();
     };
-  }, [user?.isKitchen, user?.id]);
+  }, [user?.isKitchen]); // Removed user?.id to prevent constant reconnections
 
   return {
     isConnected,

@@ -360,6 +360,10 @@ export default function HomePage() {
       startTime: "",
       endTime: "",
       roomId: "",
+      cafeRequested: false,
+      peopleCount: undefined,
+      requestedMeals: "",
+      requestedDrinks: "",
     },
   });
 
@@ -1038,7 +1042,8 @@ export default function HomePage() {
                                   max="100"
                                   placeholder="Ej: 5"
                                   {...field}
-                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -1057,6 +1062,7 @@ export default function HomePage() {
                                   placeholder="Ej: Sandwiches de jamón y queso, frutas variadas, galletas"
                                   rows={3}
                                   {...field}
+                                  value={field.value || ""}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -1075,6 +1081,7 @@ export default function HomePage() {
                                   placeholder="Ej: Café americano, té, agua mineral, jugos naturales"
                                   rows={3}
                                   {...field}
+                                  value={field.value || ""}
                                 />
                               </FormControl>
                               <FormMessage />

@@ -507,7 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     ws.on('close', () => {
       // Remove this connection from all kitchen user connections
-      for (const [userId, connections] of kitchenConnections.entries()) {
+      for (const [userId, connections] of Array.from(kitchenConnections.entries())) {
         const index = connections.indexOf(ws);
         if (index !== -1) {
           connections.splice(index, 1);
