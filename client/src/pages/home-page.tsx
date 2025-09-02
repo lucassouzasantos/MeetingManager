@@ -405,9 +405,20 @@ export default function HomePage() {
     return a.startTime.localeCompare(b.startTime);
   }) || [];
 
-  // Use appropriate bookings based on screen
-  const displayBookings = activeScreen === "bookings" ? userBookings : dashboardBookings;
-  const bookingsLoading = activeScreen === "bookings" ? userBookingsLoading : allBookingsLoading;
+  // Use appropriate bookings based on screen and admin settings
+  const getBookingsToShow = () => {
+    if (activeScreen === "bookings") {
+      // In bookings screen, show user bookings or all bookings based on admin toggle
+      return (user?.isAdmin && showAllBookings) ? allBookings : userBookings;
+    }
+    // In dashboard, always show dashboard bookings (future bookings)
+    return dashboardBookings;
+  };
+
+  const displayBookings = getBookingsToShow();
+  const bookingsLoading = activeScreen === "bookings" ? 
+    ((user?.isAdmin && showAllBookings) ? allBookingsLoading : userBookingsLoading) : 
+    allBookingsLoading;
 
   // Get top and least used rooms
   const topRooms = roomStats?.slice(0, 3) || [];
@@ -1091,7 +1102,11 @@ export default function HomePage() {
                       <Skeleton key={i} className="h-32 w-full" />
                     ))}
                   </div>
-                ) : !displayBookings || displayBookings.length === 0 ? (
+                ) : !displayBookings || displayBookings.filter(booking => {
+                  const bookingDateTime = new Date(`${booking.date}T${booking.endTime}:00`);
+                  const now = new Date();
+                  return bookingDateTime > now;
+                }).length === 0 ? (
                   <Card>
                     <CardContent className="text-center py-8">
                       <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -1103,7 +1118,11 @@ export default function HomePage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  displayBookings.map((booking: BookingWithDetails) => (
+                  displayBookings.filter(booking => {
+                    const bookingDateTime = new Date(`${booking.date}T${booking.endTime}:00`);
+                    const now = new Date();
+                    return bookingDateTime > now;
+                  }).map((booking: BookingWithDetails) => (
                     <Card key={booking.id}>
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
