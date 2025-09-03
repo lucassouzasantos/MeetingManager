@@ -754,6 +754,7 @@ export default function HomePage() {
                   <div className="text-sm text-gray-600">
                     <p><strong>Sala:</strong> {order.room?.name || 'N/A'}</p>
                     <p><strong>Solicitado por:</strong> {order.user?.fullName || 'N/A'}</p>
+                    <p><strong>Cantidad de personas:</strong> {order.peopleCount || 'No especificado'}</p>
                   </div>
                 </CardHeader>
                 <CardContent>
