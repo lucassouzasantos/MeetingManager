@@ -754,7 +754,6 @@ export default function HomePage() {
                   <div className="text-sm text-gray-600">
                     <p><strong>Sala:</strong> {order.room?.name || 'N/A'}</p>
                     <p><strong>Solicitado por:</strong> {order.user?.fullName || 'N/A'}</p>
-                    <p><strong>Cantidad de personas:</strong> {order.peopleCount || 'No especificado'}</p>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -775,6 +774,12 @@ export default function HomePage() {
                         )}
                       </div>
                     )}
+
+                    <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                      <p className="text-sm font-medium text-blue-900">
+                        <strong>Cantidad de personas:</strong> {order.peopleCount || 'No especificado'}
+                      </p>
+                    </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <span>Solicitado: {order.createdAt ? format(parseISO(order.createdAt), "dd/MM/yyyy HH:mm") : 'Fecha no disponible'}</span>
