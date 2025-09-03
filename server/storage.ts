@@ -473,22 +473,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getKitchenOrdersByUser(userId: string): Promise<KitchenOrderWithDetails[]> {
-    return await db
+    // Use subquery approach to get booking user information
+    const ordersWithBookings = await db
       .select()
       .from(kitchenOrders)
       .leftJoin(bookings, eq(kitchenOrders.bookingId, bookings.id))
-      .leftJoin(users, eq(kitchenOrders.userId, users.id))
       .leftJoin(rooms, eq(kitchenOrders.roomId, rooms.id))
       .where(eq(kitchenOrders.userId, userId))
-      .orderBy(desc(kitchenOrders.createdAt))
-      .then(results =>
-        results.map(result => ({
+      .orderBy(desc(kitchenOrders.createdAt));
+
+    // Get booking user details separately for each order
+    const ordersWithDetails = await Promise.all(
+      ordersWithBookings.map(async (result) => {
+        let bookingUser = null;
+        if (result.bookings?.userId) {
+          const [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, result.bookings.userId))
+            .limit(1);
+          bookingUser = user;
+        }
+
+        return {
           ...result.kitchen_orders,
           booking: result.bookings!,
-          user: result.users!,
+          user: bookingUser!, // User who made the booking
           room: result.rooms!,
-        }))
-      );
+        };
+      })
+    );
+
+    return ordersWithDetails;
   }
 
   async createKitchenOrder(order: InsertKitchenOrder): Promise<KitchenOrder> {
