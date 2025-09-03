@@ -763,22 +763,15 @@ export default function HomePage() {
                       <p><strong>Hora:</strong> {order.booking?.startTime || 'N/A'} - {order.booking?.endTime || 'N/A'}</p>
                     </div>
                     
-                    {(order.requestedMeals || order.requestedDrinks) && (
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-sm"><strong>Solicitud especial:</strong></p>
-                        {order.requestedMeals && (
-                          <p className="text-sm text-gray-700 mt-1"><strong>Comidas:</strong> {order.requestedMeals}</p>
-                        )}
-                        {order.requestedDrinks && (
-                          <p className="text-sm text-gray-700 mt-1"><strong>Bebidas:</strong> {order.requestedDrinks}</p>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="bg-blue-50 p-3 rounded border border-blue-200">
-                      <p className="text-sm font-medium text-blue-900">
-                        <strong>Cantidad de personas:</strong> {order.peopleCount || 'No especificado'}
-                      </p>
+                    <div className="bg-white p-3 rounded border">
+                      <p className="text-sm"><strong>Solicitud especial:</strong></p>
+                      <p className="text-sm text-gray-700 mt-1"><strong>Cantidad de personas:</strong> {order.peopleCount || 'No especificado'}</p>
+                      {order.requestedMeals && (
+                        <p className="text-sm text-gray-700 mt-1"><strong>Comidas:</strong> {order.requestedMeals}</p>
+                      )}
+                      {order.requestedDrinks && (
+                        <p className="text-sm text-gray-700 mt-1"><strong>Bebidas:</strong> {order.requestedDrinks}</p>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-500">
