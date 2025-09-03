@@ -836,7 +836,7 @@ export default function HomePage() {
                 Nueva Reserva
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Nueva Reserva</DialogTitle>
                 <DialogDescription>
@@ -859,7 +859,7 @@ export default function HomePage() {
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={bookingForm.control}
                       name="date"
@@ -900,7 +900,7 @@ export default function HomePage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={bookingForm.control}
                       name="startTime"
@@ -1027,7 +1027,7 @@ export default function HomePage() {
                     />
 
                     {bookingForm.watch("cafeRequested") && (
-                      <div className="space-y-4 pl-6 border-l-2 border-orange-400">
+                      <div className="space-y-4 pl-3 sm:pl-6 border-l-2 border-orange-400">
                         <FormField
                           control={bookingForm.control}
                           name="peopleCount"
@@ -1101,18 +1101,18 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <Button 
                       type="button" 
                       variant="outline" 
-                      className="flex-1"
+                      className="flex-1 w-full"
                       onClick={() => setNewBookingOpen(false)}
                     >
                       Cancelar
                     </Button>
                     <Button 
                       type="submit" 
-                      className="flex-1"
+                      className="flex-1 w-full"
                       disabled={createBookingMutation.isPending}
                     >
                       Crear Reserva
