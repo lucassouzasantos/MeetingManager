@@ -25,7 +25,7 @@ async function setup() {
       console.log('📝 Criando arquivo .env...');
       
       const dbUrl = await question('URL do banco PostgreSQL (ex: postgres://user:pass@localhost:5432/room_booking): ');
-      const port = await question('Porta do servidor (padrão 3000): ') || '3000';
+      const port = await question('Porta do servidor (padrão 6000): ') || '6000';
       const sessionSecret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       
       const envContent = `# Configuração Local
