@@ -11,7 +11,7 @@ console.log('🚀 Iniciando servidor local...');
 
 // Set environment variables for local development
 process.env.NODE_ENV = 'development';
-process.env.PORT = process.env.PORT || '3000';
+process.env.PORT = process.env.PORT || '6000';
 
 // Start the server
 const server = spawn('npm', ['run', 'dev'], {
