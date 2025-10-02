@@ -1,3 +1,6 @@
+// server/index.ts
+import "dotenv/config"; // 👈 carrega as variáveis do .env logo no início
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -47,29 +50,28 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // Serve the app on the specified port
-  // Default to 3000 for local development, 5000 for Replit
-  const port = parseInt(process.env.PORT || (process.env.REPLIT_ENV ? '5000' : '3000'), 10);
+  const port = parseInt(process.env.PORT || (process.env.REPLIT_ENV ? "5000" : "3000"), 10);
   const host = process.env.REPLIT_ENV ? "0.0.0.0" : "localhost";
-  
-  server.listen({
-    port,
-    host,
-    reusePort: process.env.REPLIT_ENV ? true : false,
-  }, () => {
-    log(`🌐 Servidor rodando em http://${host}:${port}`);
-    if (!process.env.REPLIT_ENV) {
-      log(`📱 Interface disponível em: http://${host}:${port}`);
-      log(`🔧 API disponível em: http://${host}:${port}/api`);
+
+  server.listen(
+    {
+      port,
+      host,
+      reusePort: process.env.REPLIT_ENV ? true : false,
+    },
+    () => {
+      log(`🌐 Servidor rodando em http://${host}:${port}`);
+      if (!process.env.REPLIT_ENV) {
+        log(`📱 Interface disponível em: http://${host}:${port}`);
+        log(`🔧 API disponível em: http://${host}:${port}/api`);
+      }
     }
-  });
+  );
 })();
+

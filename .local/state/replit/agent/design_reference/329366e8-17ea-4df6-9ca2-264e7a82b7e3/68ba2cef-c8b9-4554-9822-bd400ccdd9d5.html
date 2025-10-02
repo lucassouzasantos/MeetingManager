@@ -1,0 +1,1429 @@
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Agendamento de Salas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#6366F1',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        error: '#EF4444'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- @COMPONENT: AppContainer -->
+    <div id="app" class="min-h-screen">
+        
+        <!-- Login Screen -->
+        <!-- @COMPONENT: LoginScreen -->
+        <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+            <div class="max-w-md w-full mx-4">
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
+                            <i class="fas fa-calendar-alt text-white text-2xl"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">Sistema de Agendamento</h1>
+                        <p class="text-gray-600">Faça login para acessar o sistema</p>
+                    </div>
+                    
+                    <form class="space-y-6" data-mock="true">
+                        <div>
+                            <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                                E-mail ou Usuário
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-user text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="loginEmail" 
+                                    name="login" 
+                                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                    placeholder="Digite seu e-mail ou usuário"
+                                    data-mock="true"
+                                    data-bind="login.email"
+                                >
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                                Senha
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="password" 
+                                    id="loginPassword" 
+                                    name="password" 
+                                    class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                    placeholder="Digite sua senha"
+                                    data-mock="true"
+                                    data-bind="login.password"
+                                >
+                                <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <i class="fas fa-eye text-gray-400 hover:text-gray-600"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input 
+                                    id="remember" 
+                                    name="remember" 
+                                    type="checkbox" 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                                >
+                                <label for="remember" class="ml-2 block text-sm text-gray-700">
+                                    Lembrar de mim
+                                </label>
+                            </div>
+                            <button 
+                                type="button" 
+                                class="text-sm text-primary hover:text-secondary transition-colors"
+                                onclick="showPasswordRecovery()"
+                                data-event="click:showPasswordRecovery"
+                            >
+                                Esqueci minha senha
+                            </button>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            class="w-full bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                            data-event="click:handleLogin"
+                            data-implementation="Should validate credentials and redirect to dashboard"
+                        >
+                            Entrar
+                        </button>
+                    </form>
+
+                    <div class="mt-6 pt-6 border-t border-gray-200 text-center">
+                        <p class="text-gray-600">
+                            Não tem uma conta? 
+                            <button 
+                                class="text-primary hover:text-secondary font-medium transition-colors"
+                                onclick="showRegisterScreen()"
+                                data-event="click:showRegisterScreen"
+                            >
+                                Cadastre-se aqui
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: LoginScreen -->
+
+        <!-- Password Recovery Modal -->
+        <!-- @COMPONENT: PasswordRecoveryModal -->
+        <div id="passwordRecoveryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center justify-center w-12 h-12 bg-warning bg-opacity-10 rounded-full mb-4">
+                        <i class="fas fa-key text-warning text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Recuperar Senha</h3>
+                    <p class="text-gray-600 text-sm">Digite seu e-mail para receber as instruções de recuperação</p>
+                </div>
+
+                <form class="space-y-4" data-mock="true">
+                    <div>
+                        <label for="recoveryEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                            E-mail
+                        </label>
+                        <input 
+                            type="email" 
+                            id="recoveryEmail" 
+                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="Digite seu e-mail"
+                            data-mock="true"
+                            data-bind="recovery.email"
+                        >
+                    </div>
+
+                    <div class="flex space-x-3 pt-4">
+                        <button 
+                            type="button" 
+                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                            onclick="hidePasswordRecovery()"
+                            data-event="click:hidePasswordRecovery"
+                        >
+                            Cancelar
+                        </button>
+                        <button 
+                            type="submit" 
+                            class="flex-1 bg-warning hover:bg-yellow-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                            data-event="click:handlePasswordRecovery"
+                            data-implementation="Should send recovery email"
+                        >
+                            Enviar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: PasswordRecoveryModal -->
+
+        <!-- Registration Screen -->
+        <!-- @COMPONENT: RegisterScreen -->
+        <div id="registerScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-100 hidden">
+            <div class="max-w-md w-full mx-4">
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-secondary rounded-full mb-4">
+                            <i class="fas fa-user-plus text-white text-2xl"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">Criar Conta</h1>
+                        <p class="text-gray-600">Preencha os dados para se cadastrar</p>
+                    </div>
+                    
+                    <form class="space-y-6" data-mock="true">
+                        <div>
+                            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-2">
+                                Nome Completo *
+                            </label>
+                            <input 
+                                type="text" 
+                                id="fullName" 
+                                name="fullName" 
+                                required
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-colors"
+                                placeholder="Digite seu nome completo"
+                                data-mock="true"
+                                data-bind="register.fullName"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="position" class="block text-sm font-medium text-gray-700 mb-2">
+                                Função (Cargo) *
+                            </label>
+                            <input 
+                                type="text" 
+                                id="position" 
+                                name="position" 
+                                required
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-colors"
+                                placeholder="Ex: Gerente de Vendas"
+                                data-mock="true"
+                                data-bind="register.position"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                                E-mail *
+                            </label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                required
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-colors"
+                                placeholder="Digite seu e-mail"
+                                data-mock="true"
+                                data-bind="register.email"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                                Senha *
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password" 
+                                    required
+                                    class="block w-full px-3 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-colors"
+                                    placeholder="Digite uma senha forte"
+                                    data-mock="true"
+                                    data-bind="register.password"
+                                >
+                                <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <i class="fas fa-eye text-gray-400 hover:text-gray-600"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Mínimo 8 caracteres com letras e números</p>
+                        </div>
+
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                                Confirmar Senha *
+                            </label>
+                            <input 
+                                type="password" 
+                                id="confirmPassword" 
+                                name="confirmPassword" 
+                                required
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-colors"
+                                placeholder="Digite a senha novamente"
+                                data-mock="true"
+                                data-bind="register.confirmPassword"
+                            >
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            class="w-full bg-secondary hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2"
+                            data-event="click:handleRegister"
+                            data-implementation="Should validate form, create user, and redirect to dashboard"
+                        >
+                            Criar Conta
+                        </button>
+                    </form>
+
+                    <div class="mt-6 pt-6 border-t border-gray-200 text-center">
+                        <p class="text-gray-600">
+                            Já tem uma conta? 
+                            <button 
+                                class="text-secondary hover:text-indigo-700 font-medium transition-colors"
+                                onclick="showLoginScreen()"
+                                data-event="click:showLoginScreen"
+                            >
+                                Fazer login
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: RegisterScreen -->
+
+        <!-- Main Application -->
+        <!-- @COMPONENT: MainApp -->
+        <div id="mainApp" class="flex h-screen bg-gray-50 hidden">
+            
+            <!-- Sidebar Navigation -->
+            <!-- @COMPONENT: Sidebar -->
+            <div class="w-64 bg-white shadow-lg flex flex-col">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                            <i class="fas fa-calendar-alt text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-900">Agendamento</h2>
+                            <p class="text-xs text-gray-500">Sistema de Salas</p>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="flex-1 px-4 py-6 space-y-2">
+                    <button 
+                        class="w-full flex items-center space-x-3 px-3 py-3 text-left rounded-lg bg-primary text-white transition-colors nav-btn" 
+                        data-screen="dashboard"
+                        onclick="showScreen('dashboard')"
+                        data-event="click:showDashboard"
+                    >
+                        <i class="fas fa-chart-pie w-5"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    
+                    <button 
+                        class="w-full flex items-center space-x-3 px-3 py-3 text-left rounded-lg text-gray-700 hover:bg-gray-100 transition-colors nav-btn" 
+                        data-screen="newBooking"
+                        onclick="showScreen('newBooking')"
+                        data-event="click:showNewBooking"
+                    >
+                        <i class="fas fa-plus w-5"></i>
+                        <span>Novo Agendamento</span>
+                    </button>
+                    
+                    <button 
+                        class="w-full flex items-center space-x-3 px-3 py-3 text-left rounded-lg text-gray-700 hover:bg-gray-100 transition-colors nav-btn" 
+                        data-screen="myBookings"
+                        onclick="showScreen('myBookings')"
+                        data-event="click:showMyBookings"
+                    >
+                        <i class="fas fa-calendar w-5"></i>
+                        <span>Meus Agendamentos</span>
+                    </button>
+                    
+                    <button 
+                        class="w-full flex items-center space-x-3 px-3 py-3 text-left rounded-lg text-gray-700 hover:bg-gray-100 transition-colors nav-btn admin-only" 
+                        data-screen="roomManagement"
+                        onclick="showScreen('roomManagement')"
+                        data-event="click:showRoomManagement"
+                        data-implementation="Show only for admin users"
+                    >
+                        <i class="fas fa-cogs w-5"></i>
+                        <span>Gerenciar Salas</span>
+                    </button>
+                </nav>
+
+                <div class="p-4 border-t border-gray-200">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium text-sm text-gray-900" data-bind="user.name" data-mock="true">João Silva</p>
+                            <p class="text-xs text-gray-500" data-bind="user.position" data-mock="true">Gerente de TI</p>
+                        </div>
+                    </div>
+                    <button 
+                        class="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        onclick="logout()"
+                        data-event="click:logout"
+                        data-implementation="Should clear session and redirect to login"
+                    >
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sair</span>
+                    </button>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: Sidebar -->
+
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                
+                <!-- Dashboard Screen -->
+                <!-- @COMPONENT: DashboardScreen -->
+                <div id="dashboardScreen" class="flex-1 overflow-auto p-6 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+                            <p class="text-gray-600">Visão geral dos agendamentos</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Hoje</p>
+                            <p class="font-semibold text-gray-900" data-bind="currentDate" data-mock="true">15 de Novembro, 2024</p>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">Agendamentos Hoje</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.todayBookings" data-mock="true">8</p>
+                                </div>
+                                <div class="w-12 h-12 bg-primary bg-opacity-10 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-calendar-day text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">Salas Ativas</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.activeRooms" data-mock="true">12</p>
+                                </div>
+                                <div class="w-12 h-12 bg-success bg-opacity-10 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-door-open text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">Taxa de Ocupação</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.occupancyRate" data-mock="true">73%</p>
+                                </div>
+                                <div class="w-12 h-12 bg-warning bg-opacity-10 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-chart-pie text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 mb-1">Usuários Ativos</p>
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="stats.activeUsers" data-mock="true">45</p>
+                                </div>
+                                <div class="w-12 h-12 bg-secondary bg-opacity-10 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-users text-secondary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Room Usage Statistics -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Salas Mais Reservadas</h3>
+                            <div class="space-y-4">
+                                <!-- @MAP: topRooms.map(room => ( -->
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-mock="true">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium" data-bind="room.rank" data-mock="true">1</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900" data-bind="room.name" data-mock="true">Sala Executiva A</p>
+                                            <p class="text-sm text-gray-500" data-bind="room.location" data-mock="true">2º Andar - Ala Norte</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-semibold text-gray-900" data-bind="room.bookings" data-mock="true">24</p>
+                                        <p class="text-sm text-gray-500">agendamentos</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-mock="true">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">2</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900">Sala de Reuniões B</p>
+                                            <p class="text-sm text-gray-500">1º Andar - Ala Sul</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-semibold text-gray-900">18</p>
+                                        <p class="text-sm text-gray-500">agendamentos</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-mock="true">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">3</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900">Auditório Principal</p>
+                                            <p class="text-sm text-gray-500">Térreo - Centro</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-semibold text-gray-900">15</p>
+                                        <p class="text-sm text-gray-500">agendamentos</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Salas Menos Utilizadas</h3>
+                            <div class="space-y-4">
+                                <!-- @MAP: leastUsedRooms.map(room => ( -->
+                                <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg" data-mock="true">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-error rounded-full flex items-center justify-center">
+                                            <i class="fas fa-exclamation text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900" data-bind="room.name" data-mock="true">Sala de Treinamento C</p>
+                                            <p class="text-sm text-gray-500" data-bind="room.location" data-mock="true">3º Andar - Ala Oeste</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-semibold text-error" data-bind="room.bookings" data-mock="true">2</p>
+                                        <p class="text-sm text-gray-500">agendamentos</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg" data-mock="true">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-warning rounded-full flex items-center justify-center">
+                                            <i class="fas fa-clock text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900">Sala Criativa D</p>
+                                            <p class="text-sm text-gray-500">2º Andar - Ala Leste</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-semibold text-warning">5</p>
+                                        <p class="text-sm text-gray-500">agendamentos</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-mock="true">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-info text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900">Lab de Inovação</p>
+                                            <p class="text-sm text-gray-500">Subsolo - Ala Tech</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-semibold text-gray-600">7</p>
+                                        <p class="text-sm text-gray-500">agendamentos</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Bookings -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900">Próximos Agendamentos</h3>
+                                <button 
+                                    class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                    onclick="showScreen('newBooking')"
+                                    data-event="click:showNewBooking"
+                                >
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Novo Agendamento
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data/Hora</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sala</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responsável</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <!-- @MAP: upcomingBookings.map(booking => ( -->
+                                    <tr class="hover:bg-gray-50" data-mock="true">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-3 h-3 bg-primary rounded-full mr-3"></div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900" data-bind="booking.title" data-mock="true">Reunião de Planejamento Estratégico</p>
+                                                    <p class="text-xs text-gray-500" data-bind="booking.description" data-mock="true">Discussão dos objetivos trimestrais</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <div>
+                                                <p data-bind="booking.date" data-mock="true">16/11/2024</p>
+                                                <p class="text-xs text-gray-500" data-bind="booking.time" data-mock="true">09:00 - 11:00</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="booking.room" data-mock="true">Sala Executiva A</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="booking.responsible" data-mock="true">Maria Santos</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Confirmado
+                                            </span>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="hover:bg-gray-50" data-mock="true">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-3 h-3 bg-secondary rounded-full mr-3"></div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">Workshop de UX Design</p>
+                                                    <p class="text-xs text-gray-500">Treinamento para equipe de produto</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <div>
+                                                <p>16/11/2024</p>
+                                                <p class="text-xs text-gray-500">14:00 - 17:00</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Sala Criativa D</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Carlos Lima</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                Pendente
+                                            </span>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="hover:bg-gray-50" data-mock="true">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-3 h-3 bg-success rounded-full mr-3"></div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">Apresentação para Clientes</p>
+                                                    <p class="text-xs text-gray-500">Demo do novo produto</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <div>
+                                                <p>17/11/2024</p>
+                                                <p class="text-xs text-gray-500">10:30 - 12:00</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Auditório Principal</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Ana Rodrigues</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Confirmado
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <!-- @END_MAP )) -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: DashboardScreen -->
+
+                <!-- New Booking Screen -->
+                <!-- @COMPONENT: NewBookingScreen -->
+                <div id="newBookingScreen" class="flex-1 overflow-auto p-6 hidden">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="mb-6">
+                            <h1 class="text-2xl font-bold text-gray-900">Novo Agendamento</h1>
+                            <p class="text-gray-600">Preencha os dados para reservar uma sala</p>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <form class="space-y-6" data-mock="true">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="md:col-span-2">
+                                        <label for="meetingTitle" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Título da Reunião *
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            id="meetingTitle" 
+                                            name="title" 
+                                            required
+                                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                            placeholder="Ex: Reunião de Planejamento Mensal"
+                                            data-mock="true"
+                                            data-bind="booking.title"
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label for="meetingDate" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Data *
+                                        </label>
+                                        <input 
+                                            type="date" 
+                                            id="meetingDate" 
+                                            name="date" 
+                                            required
+                                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                            data-mock="true"
+                                            data-bind="booking.date"
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label for="roomSelect" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Sala de Reunião *
+                                        </label>
+                                        <select 
+                                            id="roomSelect" 
+                                            name="room" 
+                                            required
+                                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                            data-mock="true"
+                                            data-bind="booking.room"
+                                        >
+                                            <option value="">Selecione uma sala</option>
+                                            <option value="sala-executiva-a" data-mock="true">Sala Executiva A (12 pessoas)</option>
+                                            <option value="sala-reunioes-b" data-mock="true">Sala de Reuniões B (8 pessoas)</option>
+                                            <option value="auditorio-principal" data-mock="true">Auditório Principal (50 pessoas)</option>
+                                            <option value="sala-criativa-d" data-mock="true">Sala Criativa D (6 pessoas)</option>
+                                            <option value="lab-inovacao" data-mock="true">Lab de Inovação (15 pessoas)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="startTime" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Horário de Início *
+                                        </label>
+                                        <input 
+                                            type="time" 
+                                            id="startTime" 
+                                            name="startTime" 
+                                            required
+                                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                            data-mock="true"
+                                            data-bind="booking.startTime"
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label for="endTime" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Horário de Término *
+                                        </label>
+                                        <input 
+                                            type="time" 
+                                            id="endTime" 
+                                            name="endTime" 
+                                            required
+                                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                            data-mock="true"
+                                            data-bind="booking.endTime"
+                                        >
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Descrição
+                                    </label>
+                                    <textarea 
+                                        id="description" 
+                                        name="description" 
+                                        rows="4"
+                                        class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors resize-none"
+                                        placeholder="Descreva o objetivo da reunião, participantes esperados, etc."
+                                        data-mock="true"
+                                        data-bind="booking.description"
+                                    ></textarea>
+                                </div>
+
+                                <!-- Room Availability Check -->
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div class="flex items-start space-x-3">
+                                        <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                                        <div>
+                                            <h4 class="text-sm font-medium text-blue-900 mb-1">Verificação de Disponibilidade</h4>
+                                            <p class="text-sm text-blue-700">O sistema verificará automaticamente se a sala está disponível no horário selecionado e alertará sobre conflitos.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex space-x-4 pt-4">
+                                    <button 
+                                        type="button" 
+                                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                                        onclick="showScreen('dashboard')"
+                                        data-event="click:showDashboard"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        class="flex-1 bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                                        data-event="click:handleCreateBooking"
+                                        data-implementation="Should validate time conflicts, create booking, and show success message"
+                                    >
+                                        Criar Agendamento
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: NewBookingScreen -->
+
+                <!-- My Bookings Screen -->
+                <!-- @COMPONENT: MyBookingsScreen -->
+                <div id="myBookingsScreen" class="flex-1 overflow-auto p-6 hidden">
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-bold text-gray-900">Meus Agendamentos</h1>
+                        <p class="text-gray-600">Gerencie seus agendamentos de salas</p>
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+                        <div class="border-b border-gray-200">
+                            <nav class="flex space-x-8 px-6">
+                                <button class="py-4 px-1 border-b-2 border-primary font-medium text-sm text-primary whitespace-nowrap">
+                                    Próximos (3)
+                                </button>
+                                <button class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                                    Histórico (12)
+                                </button>
+                                <button class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                                    Cancelados (2)
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <!-- Bookings List -->
+                    <div class="space-y-4">
+                        <!-- @MAP: userBookings.map(booking => ( -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" data-mock="true">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2" data-bind="booking.title" data-mock="true">Reunião de Planejamento Estratégico</h3>
+                                    <p class="text-gray-600 mb-3" data-bind="booking.description" data-mock="true">Discussão dos objetivos trimestrais e definição de metas para o próximo período.</p>
+                                    
+                                    <div class="flex items-center space-x-6 text-sm text-gray-500">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-calendar"></i>
+                                            <span data-bind="booking.date" data-mock="true">16 de Novembro, 2024</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-clock"></i>
+                                            <span data-bind="booking.time" data-mock="true">09:00 - 11:00</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-door-open"></i>
+                                            <span data-bind="booking.room" data-mock="true">Sala Executiva A</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3 ml-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Confirmado
+                                    </span>
+                                    <div class="flex space-x-2">
+                                        <button 
+                                            class="p-2 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Editar agendamento"
+                                            data-event="click:editBooking"
+                                            data-implementation="Should open edit modal"
+                                        >
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button 
+                                            class="p-2 text-gray-400 hover:text-error hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Cancelar agendamento"
+                                            data-event="click:cancelBooking"
+                                            data-implementation="Should show cancellation confirmation"
+                                        >
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" data-mock="true">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Workshop de UX Design</h3>
+                                    <p class="text-gray-600 mb-3">Treinamento prático para equipe de produto sobre metodologias de design centrado no usuário.</p>
+                                    
+                                    <div class="flex items-center space-x-6 text-sm text-gray-500">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-calendar"></i>
+                                            <span>18 de Novembro, 2024</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-clock"></i>
+                                            <span>14:00 - 17:00</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-door-open"></i>
+                                            <span>Sala Criativa D</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3 ml-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Pendente
+                                    </span>
+                                    <div class="flex space-x-2">
+                                        <button class="p-2 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Editar agendamento">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-400 hover:text-error hover:bg-red-50 rounded-lg transition-colors" title="Cancelar agendamento">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" data-mock="true">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Apresentação Trimestral</h3>
+                                    <p class="text-gray-600 mb-3">Apresentação dos resultados do trimestre para a diretoria e stakeholders principais.</p>
+                                    
+                                    <div class="flex items-center space-x-6 text-sm text-gray-500">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-calendar"></i>
+                                            <span>22 de Novembro, 2024</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-clock"></i>
+                                            <span>10:00 - 12:00</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-door-open"></i>
+                                            <span>Auditório Principal</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3 ml-4">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Confirmado
+                                    </span>
+                                    <div class="flex space-x-2">
+                                        <button class="p-2 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Editar agendamento">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-400 hover:text-error hover:bg-red-50 rounded-lg transition-colors" title="Cancelar agendamento">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: MyBookingsScreen -->
+
+                <!-- Room Management Screen (Admin Only) -->
+                <!-- @COMPONENT: RoomManagementScreen -->
+                <div id="roomManagementScreen" class="flex-1 overflow-auto p-6 hidden">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900">Gerenciar Salas</h1>
+                                <p class="text-gray-600">Cadastre e gerencie as salas de reunião</p>
+                            </div>
+                            <button 
+                                class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                                onclick="showNewRoomModal()"
+                                data-event="click:showNewRoomModal"
+                                data-implementation="Should open new room creation modal"
+                            >
+                                <i class="fas fa-plus mr-2"></i>
+                                Nova Sala
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Rooms Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- @MAP: rooms.map(room => ( -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" data-mock="true">
+                            <div class="p-6">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-1" data-bind="room.name" data-mock="true">Sala Executiva A</h3>
+                                        <p class="text-sm text-gray-500 mb-2" data-bind="room.location" data-mock="true">2º Andar - Ala Norte</p>
+                                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-users"></i>
+                                                <span data-bind="room.capacity" data-mock="true">12 pessoas</span>
+                                            </div>
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-calendar-check"></i>
+                                                <span data-bind="room.bookings" data-mock="true">24 agendamentos</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2 ml-4">
+                                        <button 
+                                            class="p-2 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Editar sala"
+                                            data-event="click:editRoom"
+                                            data-implementation="Should open edit room modal"
+                                        >
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button 
+                                            class="p-2 text-gray-400 hover:text-error hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Remover sala"
+                                            data-event="click:deleteRoom"
+                                            data-implementation="Should show deletion confirmation"
+                                        >
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Taxa de ocupação</span>
+                                        <span class="text-sm font-medium text-gray-900" data-bind="room.occupancyRate" data-mock="true">85%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: 85%" data-bind="room.occupancyWidth" data-mock="true"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-gray-500">Status</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" data-bind="room.status" data-mock="true">
+                                            Ativa
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" data-mock="true">
+                            <div class="p-6">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Sala de Reuniões B</h3>
+                                        <p class="text-sm text-gray-500 mb-2">1º Andar - Ala Sul</p>
+                                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-users"></i>
+                                                <span>8 pessoas</span>
+                                            </div>
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-calendar-check"></i>
+                                                <span>18 agendamentos</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2 ml-4">
+                                        <button class="p-2 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Editar sala">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-400 hover:text-error hover:bg-red-50 rounded-lg transition-colors" title="Remover sala">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Taxa de ocupação</span>
+                                        <span class="text-sm font-medium text-gray-900">72%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-secondary h-2 rounded-full" style="width: 72%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-gray-500">Status</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Ativa
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" data-mock="true">
+                            <div class="p-6">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Auditório Principal</h3>
+                                        <p class="text-sm text-gray-500 mb-2">Térreo - Centro</p>
+                                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-users"></i>
+                                                <span>50 pessoas</span>
+                                            </div>
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-calendar-check"></i>
+                                                <span>15 agendamentos</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2 ml-4">
+                                        <button class="p-2 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Editar sala">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-400 hover:text-error hover:bg-red-50 rounded-lg transition-colors" title="Remover sala">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Taxa de ocupação</span>
+                                        <span class="text-sm font-medium text-gray-900">45%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-warning h-2 rounded-full" style="width: 45%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-gray-500">Status</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Ativa
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" data-mock="true">
+                            <div class="p-6">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Sala Criativa D</h3>
+                                        <p class="text-sm text-gray-500 mb-2">2º Andar - Ala Leste</p>
+                                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-users"></i>
+                                                <span>6 pessoas</span>
+                                            </div>
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-calendar-check"></i>
+                                                <span>5 agendamentos</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2 ml-4">
+                                        <button class="p-2 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Editar sala">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-400 hover:text-error hover:bg-red-50 rounded-lg transition-colors" title="Remover sala">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Taxa de ocupação</span>
+                                        <span class="text-sm font-medium text-gray-900">25%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-error h-2 rounded-full" style="width: 25%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-gray-500">Status</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Pouco Usada
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: RoomManagementScreen -->
+
+            </div>
+        </div>
+        <!-- @END_COMPONENT: MainApp -->
+
+        <!-- New Room Modal -->
+        <!-- @COMPONENT: NewRoomModal -->
+        <div id="newRoomModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center justify-center w-12 h-12 bg-primary bg-opacity-10 rounded-full mb-4">
+                        <i class="fas fa-door-open text-primary text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Nova Sala</h3>
+                    <p class="text-gray-600 text-sm">Cadastre uma nova sala de reunião</p>
+                </div>
+
+                <form class="space-y-4" data-mock="true">
+                    <div>
+                        <label for="roomName" class="block text-sm font-medium text-gray-700 mb-2">
+                            Nome da Sala *
+                        </label>
+                        <input 
+                            type="text" 
+                            id="roomName" 
+                            required
+                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="Ex: Sala Executive Premium"
+                            data-mock="true"
+                            data-bind="newRoom.name"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="roomLocation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Localização *
+                        </label>
+                        <input 
+                            type="text" 
+                            id="roomLocation" 
+                            required
+                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="Ex: 3º Andar - Ala Oeste"
+                            data-mock="true"
+                            data-bind="newRoom.location"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="roomCapacity" class="block text-sm font-medium text-gray-700 mb-2">
+                            Capacidade Máxima *
+                        </label>
+                        <input 
+                            type="number" 
+                            id="roomCapacity" 
+                            required
+                            min="1"
+                            max="100"
+                            class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="Ex: 15"
+                            data-mock="true"
+                            data-bind="newRoom.capacity"
+                        >
+                    </div>
+
+                    <div class="flex space-x-3 pt-4">
+                        <button 
+                            type="button" 
+                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors"
+                            onclick="hideNewRoomModal()"
+                            data-event="click:hideNewRoomModal"
+                        >
+                            Cancelar
+                        </button>
+                        <button 
+                            type="submit" 
+                            class="flex-1 bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                            data-event="click:handleCreateRoom"
+                            data-implementation="Should validate form, create room, and refresh room list"
+                        >
+                            Criar Sala
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: NewRoomModal -->
+
+    </div>
+    <!-- @END_COMPONENT: AppContainer -->
+
+    <script>
+        (function() {
+            // TODO: Implement business logic, API calls, and state management
+            
+            // Screen navigation
+            function showScreen(screenName) {
+                // Hide all screens
+                const screens = ['dashboard', 'newBooking', 'myBookings', 'roomManagement'];
+                screens.forEach(screen => {
+                    const element = document.getElementById(screen + 'Screen');
+                    if (element) element.classList.add('hidden');
+                });
+
+                // Show selected screen
+                const targetScreen = document.getElementById(screenName + 'Screen');
+                if (targetScreen) targetScreen.classList.remove('hidden');
+
+                // Update navigation active state
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('text-gray-700', 'hover:bg-gray-100');
+                });
+
+                const activeBtn = document.querySelector(`[data-screen="${screenName}"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('bg-primary', 'text-white');
+                    activeBtn.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                }
+            }
+
+            // Auth screen management
+            function showLoginScreen() {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('registerScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            }
+
+            function showRegisterScreen() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('registerScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            }
+
+            function showMainApp() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('registerScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                showScreen('dashboard');
+            }
+
+            // Modal management
+            function showPasswordRecovery() {
+                document.getElementById('passwordRecoveryModal').classList.remove('hidden');
+            }
+
+            function hidePasswordRecovery() {
+                document.getElementById('passwordRecoveryModal').classList.add('hidden');
+            }
+
+            function showNewRoomModal() {
+                document.getElementById('newRoomModal').classList.remove('hidden');
+            }
+
+            function hideNewRoomModal() {
+                document.getElementById('newRoomModal').classList.add('hidden');
+            }
+
+            function logout() {
+                // TODO: Clear session and redirect to login
+                showLoginScreen();
+            }
+
+            // Make functions globally available
+            window.showScreen = showScreen;
+            window.showLoginScreen = showLoginScreen;
+            window.showRegisterScreen = showRegisterScreen;
+            window.showMainApp = showMainApp;
+            window.showPasswordRecovery = showPasswordRecovery;
+            window.hidePasswordRecovery = hidePasswordRecovery;
+            window.showNewRoomModal = showNewRoomModal;
+            window.hideNewRoomModal = hideNewRoomModal;
+            window.logout = logout;
+
+            // Initialize app
+            document.addEventListener('DOMContentLoaded', function() {
+                // Check if user is logged in (mock)
+                const isLoggedIn = false; // TODO: Check actual session
+                
+                if (isLoggedIn) {
+                    showMainApp();
+                } else {
+                    showLoginScreen();
+                }
+
+                // Close modals when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('fixed') && e.target.classList.contains('inset-0')) {
+                        hidePasswordRecovery();
+                        hideNewRoomModal();
+                    }
+                });
+
+                // Form submissions (mock handlers)
+                document.querySelectorAll('form').forEach(form => {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        // TODO: Handle form submission
+                        console.log('Form submitted:', e.target);
+                    });
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
